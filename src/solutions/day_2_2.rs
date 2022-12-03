@@ -1,7 +1,7 @@
-use crate::utils::files::read_file_to_lines;
+use crate::utils::files::get_data_as_lines;
 
 pub fn solve() -> i32 {
-    let lines = read_file_to_lines("./data", "day_2_strategy.txt");
+    let lines = get_data_as_lines("day_2_strategy.txt");
 
     let mut total_score = 0;
     for line in lines {

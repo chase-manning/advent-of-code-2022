@@ -1,7 +1,7 @@
-use crate::utils::files::read_file_to_lines;
+use crate::utils::files::get_data_as_lines;
 
 pub fn solve() -> i32 {
-    let lines = read_file_to_lines("./data", "day_1_calories.txt");
+    let lines = get_data_as_lines("day_1_calories.txt");
 
     let mut first_elf_calories = 0;
     let mut second_elf_calories = 0;
