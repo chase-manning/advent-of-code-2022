@@ -1,5 +1,3 @@
-use clap::builder::Str;
-
 use crate::utils::files::get_data_as_lines;
 
 pub fn solve() -> String {
