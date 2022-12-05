@@ -14,7 +14,7 @@ fn get_range(line: &str) -> (i32, i32) {
     (min, max)
 }
 
-pub fn solve() -> i32 {
+pub fn solve() -> String {
     let lines = get_data_as_lines("day_4_assignments.txt");
     let mut overlapping = 0;
     for line in lines {
@@ -25,10 +25,10 @@ pub fn solve() -> i32 {
             overlapping += 1;
         }
     }
-    overlapping
+    overlapping.to_string()
 }
 
 #[test]
 fn result() {
-    assert_eq!(solve(), 823);
+    assert_eq!(solve(), "823");
 }

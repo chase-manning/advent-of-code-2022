@@ -1,6 +1,8 @@
+use clap::builder::Str;
+
 use crate::utils::files::get_data_as_lines;
 
-pub fn solve() -> i32 {
+pub fn solve() -> String {
     let lines = get_data_as_lines("day_1_calories.txt");
 
     let mut first_elf_calories = 0;
@@ -25,10 +27,10 @@ pub fn solve() -> i32 {
         let calories = line.parse::<i32>().unwrap();
         elf_calories += calories;
     }
-    first_elf_calories + second_elf_calories + third_elf_calories
+    (first_elf_calories + second_elf_calories + third_elf_calories).to_string()
 }
 
 #[test]
 fn result() {
-    assert_eq!(solve(), 204639);
+    assert_eq!(solve(), "204639");
 }

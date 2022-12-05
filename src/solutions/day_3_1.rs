@@ -19,7 +19,7 @@ fn find_matching_character(a: &str, b: &str) -> Option<char> {
     panic!("No matching character found");
 }
 
-pub fn solve() -> i32 {
+pub fn solve() -> String {
     let mut total_priority = 0;
     for line in get_data_as_lines("day_3_rucksacks.txt") {
         let first_half = &line[..line.len() / 2];
@@ -27,10 +27,10 @@ pub fn solve() -> i32 {
         let matching_character = find_matching_character(first_half, second_half);
         total_priority += character_priority(&matching_character.unwrap().to_string());
     }
-    total_priority
+    total_priority.to_string()
 }
 
 #[test]
 fn result() {
-    assert_eq!(solve(), 8401);
+    assert_eq!(solve(), "8401");
 }

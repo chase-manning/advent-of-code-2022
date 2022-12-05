@@ -11,7 +11,7 @@ fn get_range(line: &str) -> (i32, i32) {
     (min, max)
 }
 
-pub fn solve() -> i32 {
+pub fn solve() -> String {
     let lines = get_data_as_lines("day_4_assignments.txt");
     let mut subsets = 0;
     for line in lines {
@@ -22,10 +22,10 @@ pub fn solve() -> i32 {
             subsets += 1;
         }
     }
-    subsets
+    subsets.to_string()
 }
 
 #[test]
 fn result() {
-    assert_eq!(solve(), 431);
+    assert_eq!(solve(), "431");
 }

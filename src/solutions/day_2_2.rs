@@ -1,6 +1,6 @@
 use crate::utils::files::get_data_as_lines;
 
-pub fn solve() -> i32 {
+pub fn solve() -> String {
     let lines = get_data_as_lines("day_2_strategy.txt");
 
     let mut total_score = 0;
@@ -36,10 +36,10 @@ pub fn solve() -> i32 {
             _ => panic!("Invalid me"),
         };
     }
-    total_score
+    total_score.to_string()
 }
 
 #[test]
 fn result() {
-    assert_eq!(solve(), 12429);
+    assert_eq!(solve(), "12429");
 }

@@ -1,6 +1,6 @@
 use crate::utils::files::get_data_as_lines;
 
-pub fn solve() -> i32 {
+pub fn solve() -> String {
     let lines = get_data_as_lines("day_1_calories.txt");
 
     let mut highest = 0;
@@ -16,10 +16,10 @@ pub fn solve() -> i32 {
         let calories = line.parse::<i32>().unwrap();
         elf_calories += calories;
     }
-    highest
+    highest.to_string()
 }
 
 #[test]
 fn result() {
-    assert_eq!(solve(), 71124);
+    assert_eq!(solve(), "71124");
 }

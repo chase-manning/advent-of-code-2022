@@ -19,7 +19,7 @@ fn find_badge(a: &str, b: &str, c: &str) -> Option<char> {
     panic!("No matching character found");
 }
 
-pub fn solve() -> i32 {
+pub fn solve() -> String {
     let mut total_priority = 0;
     let lines = get_data_as_lines("day_3_rucksacks.txt");
     for i in 0..(lines.len() / 3) {
@@ -27,10 +27,10 @@ pub fn solve() -> i32 {
         let badge = find_badge(&lines[base], &lines[base + 1], &lines[base + 2]);
         total_priority += character_priority(&badge.unwrap().to_string());
     }
-    total_priority
+    total_priority.to_string()
 }
 
 #[test]
 fn result() {
-    assert_eq!(solve(), 2641);
+    assert_eq!(solve(), "2641");
 }
