@@ -1,17 +1,11 @@
 use crate::utils::files::get_data_as_lines;
 
 #[derive(Debug, Clone)]
-struct File {
-    name: String,
-    size: u64,
-}
-
-#[derive(Debug, Clone)]
 struct Directory {
     name: String,
     size: u64,
     children: Vec<Directory>,
-    files: Vec<File>,
+    files: Vec<u64>,
 }
 
 fn add_child(root: &mut Directory, path: &Vec<String>, child_name: String) {
@@ -28,7 +22,7 @@ fn add_child(root: &mut Directory, path: &Vec<String>, child_name: String) {
     }
 }
 
-fn add_file(root: &mut Directory, path: &Vec<String>, file: File) {
+fn add_file(root: &mut Directory, path: &Vec<String>, file: u64) {
     if path.len() == 0 {
         root.files.push(file);
     } else {
@@ -43,7 +37,7 @@ fn populate_sizes(root: &mut Directory) {
         root.size += child.size;
     }
     for file in root.files.iter() {
-        root.size += file.size;
+        root.size += file;
     }
 }
 
@@ -78,11 +72,7 @@ fn get_directory(lines: Vec<String>) -> Directory {
             continue;
         }
         let data = line.split(" ").collect::<Vec<&str>>();
-        let file = File {
-            name: data[1].to_string(),
-            size: data[0].parse::<u64>().unwrap(),
-        };
-        add_file(&mut root, &path, file);
+        add_file(&mut root, &path, data[0].parse::<u64>().unwrap());
     }
 
     populate_sizes(&mut root);
@@ -108,5 +98,5 @@ pub fn solve() -> String {
 
 #[test]
 fn result() {
-    assert_eq!(solve(), "3697");
+    assert_eq!(solve(), "1297159");
 }
