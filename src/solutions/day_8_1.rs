@@ -71,5 +71,5 @@ pub fn solve() -> String {
 
 #[test]
 fn result() {
-    assert_eq!(solve(), "3866390");
+    assert_eq!(solve(), "1776");
 }
