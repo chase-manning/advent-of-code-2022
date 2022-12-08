@@ -1,50 +1,14 @@
 use crate::utils::files::get_data_as_lines;
 
-fn is_visible_bottom(trees: &Vec<Vec<u8>>, x: usize, y: usize) -> bool {
-    let current_tree = trees[y][x];
-    for i in y + 1..trees.len() {
-        if trees[i][x] >= current_tree {
-            return false;
-        }
-    }
-    return true;
-}
-
-fn is_visible_top(trees: &Vec<Vec<u8>>, x: usize, y: usize) -> bool {
-    let current_tree = trees[y][x];
-    for i in 0..y {
-        if trees[i][x] >= current_tree {
-            return false;
-        }
-    }
-    return true;
-}
-
-fn is_visible_right(trees: &Vec<Vec<u8>>, x: usize, y: usize) -> bool {
-    let current_tree = trees[y][x];
-    for i in x + 1..trees[0].len() {
-        if trees[y][i] >= current_tree {
-            return false;
-        }
-    }
-    return true;
-}
-
-fn is_visible_left(trees: &Vec<Vec<u8>>, x: usize, y: usize) -> bool {
-    let current_tree = trees[y][x];
-    for i in 0..x {
-        if trees[y][i] >= current_tree {
-            return false;
-        }
-    }
-    return true;
-}
-
 fn is_visible(trees: &Vec<Vec<u8>>, x: usize, y: usize) -> bool {
-    is_visible_bottom(trees, x, y)
-        || is_visible_top(trees, x, y)
-        || is_visible_right(trees, x, y)
-        || is_visible_left(trees, x, y)
+    (0..x).into_iter().all(|i| trees[y][i] < trees[y][x])
+        || (x + 1..trees[0].len())
+            .into_iter()
+            .all(|i| trees[y][i] < trees[y][x])
+        || (0..y).into_iter().all(|i| trees[i][x] < trees[y][x])
+        || (y + 1..trees.len())
+            .into_iter()
+            .all(|i| trees[i][x] < trees[y][x])
 }
 
 pub fn solve() -> String {
@@ -58,15 +22,16 @@ pub fn solve() -> String {
         })
         .collect();
 
-    let mut visible_trees = 0;
-    for y in 0..trees.len() {
-        for x in 0..trees[0].len() {
-            if is_visible(&trees, x, y) {
-                visible_trees += 1;
-            }
-        }
-    }
-    visible_trees.to_string()
+    (0..trees.len())
+        .into_iter()
+        .map(|y| {
+            (0..trees[0].len())
+                .into_iter()
+                .filter(|&x| is_visible(&trees, x, y))
+                .count()
+        })
+        .sum::<usize>()
+        .to_string()
 }
 
 #[test]
