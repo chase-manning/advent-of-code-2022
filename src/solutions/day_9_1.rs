@@ -1,4 +1,4 @@
-use crate::utils::files::get_data_as_lines;
+use crate::utils::files::{get_data_as_lines, split2};
 
 pub fn solve() -> String {
     let lines = get_data_as_lines("day_9_rope.txt");
@@ -8,9 +8,7 @@ pub fn solve() -> String {
     let mut history = vec![(0, 0)];
 
     for line in lines {
-        let data = line.split(' ').collect::<Vec<&str>>();
-        let direction = data[0].chars().next().unwrap();
-        let movements = data[1].parse::<i32>().unwrap();
+        let (direction, movements) = split2(line, " ");
         for _ in (0..movements).into_iter() {
             head = match direction {
                 'U' => (head.0, head.1 + 1),
