@@ -11,14 +11,14 @@ pub fn solve() -> String {
     let mut lines = get_data_as_lines("day_5_crates.txt");
 
     // Populating data
-    let mut crates: Vec<Vec<char>> = (0..9).into_iter().map(|_| Vec::new()).collect();
+    let mut crates: Vec<Vec<char>> = (0..9).map(|_| Vec::new()).collect();
     let mut instructions: Vec<Instruction> = Vec::new();
     lines.reverse();
     lines.iter().for_each(|line| {
         // Handling crates
         if line.contains("[") {
             let chars: Vec<char> = line.chars().collect();
-            (0..9).into_iter().for_each(|i| {
+            (0..9).for_each(|i| {
                 let char = chars[i * 4 + 1];
                 if char != ' ' {
                     crates[i].push(char);
@@ -40,7 +40,7 @@ pub fn solve() -> String {
     // Moving crates
     instructions.reverse();
     instructions.iter().for_each(|instruction| {
-        (0..instruction.amount).into_iter().for_each(|_| {
+        (0..instruction.amount).for_each(|_| {
             let crate_from = crates[instruction.from].pop().unwrap();
             crates[instruction.to].push(crate_from);
         });

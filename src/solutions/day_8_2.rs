@@ -14,7 +14,7 @@ fn visible_trees_bottom(trees: &Vec<Vec<u8>>, x: usize, y: usize) -> usize {
 
 fn visible_trees_top(trees: &Vec<Vec<u8>>, x: usize, y: usize) -> usize {
     let mut visible_trees = 1;
-    for i in (1..y).rev().into_iter() {
+    for i in (1..y).rev() {
         if trees[i][x] < trees[y][x] {
             visible_trees += 1;
         } else {
@@ -38,7 +38,7 @@ fn visible_trees_right(trees: &Vec<Vec<u8>>, x: usize, y: usize) -> usize {
 
 fn visible_trees_left(trees: &Vec<Vec<u8>>, x: usize, y: usize) -> usize {
     let mut visible_trees = 1;
-    for i in (1..x).rev().into_iter() {
+    for i in (1..x).rev() {
         if trees[y][i] < trees[y][x] {
             visible_trees += 1;
         } else {

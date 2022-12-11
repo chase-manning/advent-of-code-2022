@@ -9,7 +9,7 @@ pub fn solve() -> String {
 
     for line in lines {
         let (direction, movements) = split2(line, " ");
-        for _ in (0..movements).into_iter() {
+        for _ in 0..movements {
             head = match direction {
                 'U' => (head.0, head.1 + 1),
                 'D' => (head.0, head.1 - 1),

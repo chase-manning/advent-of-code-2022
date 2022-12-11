@@ -13,7 +13,7 @@ struct Monkey {
 
 fn get_monkeys(lines: Vec<String>) -> Vec<Monkey> {
     let mut monkeys: Vec<Monkey> = Vec::new();
-    for i in (0..8).into_iter() {
+    for i in 0..8 {
         let monkey_pos = i * 7;
         let mut value_string = lines[monkey_pos + 2][25..].split(" ").next().unwrap();
         if value_string == "old" {
@@ -37,7 +37,7 @@ fn get_monkeys(lines: Vec<String>) -> Vec<Monkey> {
 
 fn lowest_common_multiple(items: Vec<usize>) -> usize {
     let mut lcm = items[0];
-    for i in (1..items.len()).into_iter() {
+    for i in 1..items.len() {
         let mut a = lcm;
         let mut b = items[i];
         while b != 0 {
@@ -55,8 +55,8 @@ pub fn solve() -> String {
 
     let lcm = lowest_common_multiple(monkeys.iter().map(|m| m.check).collect());
 
-    for _ in (0..10000).into_iter() {
-        for i in (0..monkeys.len()).into_iter() {
+    for _ in 0..10000 {
+        for i in 0..monkeys.len() {
             let monkey = monkeys[i].clone();
             for item in monkey.items {
                 let mut new_item = item.clone();

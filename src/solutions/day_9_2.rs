@@ -28,7 +28,7 @@ fn get_tail(head: (i64, i64), tail: (i64, i64)) -> (i64, i64) {
 
 fn get_tails(head: (i64, i64), tails: Vec<(i64, i64)>) -> Vec<(i64, i64)> {
     let mut new_tails = vec![];
-    for i in (0..tails.len()).into_iter() {
+    for i in 0..tails.len() {
         if i == 0 {
             new_tails.push(get_tail(head, tails[i]));
         } else {
@@ -47,7 +47,7 @@ pub fn solve() -> String {
 
     for line in lines {
         let (direction, movements) = split2(line, " ");
-        for _ in (0..movements).into_iter() {
+        for _ in 0..movements {
             head = match direction {
                 'U' => (head.0, head.1 + 1),
                 'D' => (head.0, head.1 - 1),

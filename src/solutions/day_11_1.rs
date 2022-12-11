@@ -13,7 +13,7 @@ struct Monkey {
 
 fn get_monkeys(lines: Vec<String>) -> Vec<Monkey> {
     let mut monkeys: Vec<Monkey> = Vec::new();
-    for i in (0..8).into_iter() {
+    for i in 0..8 {
         let monkey_pos = i * 7;
         let mut value_string = lines[monkey_pos + 2][25..].split(" ").next().unwrap();
         if value_string == "old" {
@@ -38,8 +38,8 @@ fn get_monkeys(lines: Vec<String>) -> Vec<Monkey> {
 pub fn solve() -> String {
     let mut monkeys = get_monkeys(get_data_as_lines("day_11_monkey.txt"));
 
-    for _ in (0..20).into_iter() {
-        for i in (0..monkeys.len()).into_iter() {
+    for _ in 0..20 {
+        for i in 0..monkeys.len() {
             let monkey = monkeys[i].clone();
             for item in monkey.items {
                 let mut new_item = item.clone();
