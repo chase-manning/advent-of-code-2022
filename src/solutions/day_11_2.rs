@@ -59,10 +59,10 @@ pub fn solve() -> String {
         for i in 0..monkeys.len() {
             let monkey = monkeys[i].clone();
             for item in monkey.items {
-                let mut new_item = item.clone();
-                let mut value = monkey.value.clone();
+                let mut new_item = item;
+                let mut value = monkey.value;
                 if value == 0 {
-                    value = item.clone();
+                    value = item;
                 }
                 match monkey.operation {
                     '+' => new_item += value,
