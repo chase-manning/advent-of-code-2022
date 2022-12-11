@@ -20,3 +20,7 @@ where
     let b = parts.next().unwrap().parse().unwrap();
     (a, b)
 }
+
+pub fn last_number(s: &String) -> usize {
+    s.split(" ").last().unwrap().parse::<usize>().unwrap()
+}
