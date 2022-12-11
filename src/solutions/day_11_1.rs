@@ -2,7 +2,6 @@ use crate::utils::files::{get_data_as_lines, last_number};
 
 #[derive(Debug, Clone)]
 struct Monkey {
-    index: usize,
     items: Vec<usize>,
     operation: char,
     value: usize,
@@ -16,28 +15,20 @@ fn get_monkeys(lines: Vec<String>) -> Vec<Monkey> {
     let mut monkeys: Vec<Monkey> = Vec::new();
     for i in (0..8).into_iter() {
         let monkey_pos = i * 7;
-        let index = i;
-        let items = &lines[monkey_pos + 1][18..]
-            .split(", ")
-            .map(|s| s.parse::<usize>().unwrap())
-            .collect::<Vec<usize>>();
-        let operation = lines[monkey_pos + 2][23..=24].chars().next().unwrap();
         let mut value_string = lines[monkey_pos + 2][25..].split(" ").next().unwrap();
         if value_string == "old" {
             value_string = "0";
         }
-        let value = value_string.parse::<usize>().unwrap();
-        let check = last_number(&lines[monkey_pos + 3]);
-        let true_monkey = last_number(&lines[monkey_pos + 4]);
-        let false_monkey = last_number(&lines[monkey_pos + 5]);
         monkeys.push(Monkey {
-            index,
-            items: items.to_vec(),
-            operation,
-            value,
-            check,
-            true_monkey,
-            false_monkey,
+            items: lines[monkey_pos + 1][18..]
+                .split(", ")
+                .map(|s| s.parse::<usize>().unwrap())
+                .collect::<Vec<usize>>(),
+            operation: lines[monkey_pos + 2][23..=24].chars().next().unwrap(),
+            value: value_string.parse::<usize>().unwrap(),
+            check: last_number(&lines[monkey_pos + 3]),
+            true_monkey: last_number(&lines[monkey_pos + 4]),
+            false_monkey: last_number(&lines[monkey_pos + 5]),
             inspections: 0,
         });
     }
@@ -47,7 +38,7 @@ fn get_monkeys(lines: Vec<String>) -> Vec<Monkey> {
 pub fn solve() -> String {
     let mut monkeys = get_monkeys(get_data_as_lines("day_11_monkey.txt"));
 
-    for j in (0..20).into_iter() {
+    for _ in (0..20).into_iter() {
         for i in (0..monkeys.len()).into_iter() {
             let monkey = monkeys[i].clone();
             for item in monkey.items {
