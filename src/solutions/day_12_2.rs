@@ -65,17 +65,15 @@ fn get_starting_positions(hills: &Vec<Vec<u8>>) -> Vec<(usize, usize)> {
 
 pub fn solve() -> String {
     let hills = get_hills();
-    let mut visited = vec![vec![std::usize::MAX; hills[0].len()]; hills.len()];
-
-    let mut best_steps = std::usize::MAX;
-    let starting_positions = get_starting_positions(&hills);
-    for starting_position in starting_positions {
-        let steps = fastest_path(&hills, starting_position, &mut visited, 0);
-        if steps < best_steps {
-            best_steps = steps;
-        }
-    }
-    best_steps.to_string()
+    get_starting_positions(&hills)
+        .into_iter()
+        .map(|starting_position| {
+            let mut visited = vec![vec![std::usize::MAX; hills[0].len()]; hills.len()];
+            fastest_path(&hills, starting_position, &mut visited, 0)
+        })
+        .min()
+        .unwrap()
+        .to_string()
 }
 
 #[test]
