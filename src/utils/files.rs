@@ -21,6 +21,6 @@ where
     (a, b)
 }
 
-pub fn last_number(s: &String) -> usize {
+pub fn last_number(s: &str) -> usize {
     s.split(' ').last().unwrap().parse::<usize>().unwrap()
 }
