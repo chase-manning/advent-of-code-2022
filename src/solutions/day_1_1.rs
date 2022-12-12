@@ -6,7 +6,7 @@ pub fn solve() -> String {
     let mut highest = 0;
     let mut elf_calories = 0;
     for line in lines {
-        if line == "" {
+        if line.is_empty() {
             if elf_calories > highest {
                 highest = elf_calories;
             }

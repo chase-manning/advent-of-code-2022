@@ -9,9 +9,9 @@ struct Directory {
 }
 
 fn add_child(root: &mut Directory, path: &Vec<String>, child_name: String) {
-    if path.len() == 0 {
+    if path.is_empty() {
         root.children.push(Directory {
-            name: child_name.clone(),
+            name: child_name,
             size: 0,
             children: Vec::new(),
             files: Vec::new(),
@@ -23,7 +23,7 @@ fn add_child(root: &mut Directory, path: &Vec<String>, child_name: String) {
 }
 
 fn add_file(root: &mut Directory, path: &Vec<String>, file: u64) {
-    if path.len() == 0 {
+    if path.is_empty() {
         root.files.push(file);
     } else {
         let child = root.children.iter_mut().find(|child| child.name == path[0]);
@@ -63,15 +63,15 @@ fn get_directory(lines: Vec<String>) -> Directory {
             continue;
         }
         if line.contains("$ cd") {
-            path.push(line.split(" ").last().unwrap().to_string());
+            path.push(line.split(' ').last().unwrap().to_string());
             continue;
         }
         if line.contains("dir ") {
-            let child_name = line.split(" ").last().unwrap().to_string();
+            let child_name = line.split(' ').last().unwrap().to_string();
             add_child(&mut root, &path, child_name);
             continue;
         }
-        let data = line.split(" ").collect::<Vec<&str>>();
+        let data = line.split(' ').collect::<Vec<&str>>();
         add_file(&mut root, &path, data[0].parse::<u64>().unwrap());
     }
 
@@ -92,14 +92,14 @@ fn get_smallest_directory_size_above_requirement(directory: &Directory, requirem
     if smallest == 0 {
         return directory.size;
     }
-    return smallest;
+    smallest
 }
 
 pub fn solve() -> String {
     let lines = get_data_as_lines("day_7_commands.txt");
     let directory = get_directory(lines);
     let required = directory.size - 40000000;
-    return get_smallest_directory_size_above_requirement(&directory, required).to_string();
+    get_smallest_directory_size_above_requirement(&directory, required).to_string()
 }
 
 #[test]

@@ -8,7 +8,7 @@ pub fn solve() -> String {
     let mut third_elf_calories = 0;
     let mut elf_calories = 0;
     for line in lines {
-        if line == "" {
+        if line.is_empty() {
             if elf_calories > first_elf_calories {
                 third_elf_calories = second_elf_calories;
                 second_elf_calories = first_elf_calories;
