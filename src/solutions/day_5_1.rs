@@ -16,7 +16,7 @@ pub fn solve() -> String {
     lines.reverse();
     lines.iter().for_each(|line| {
         // Handling crates
-        if line.contains("[") {
+        if line.contains('[') {
             let chars: Vec<char> = line.chars().collect();
             (0..9).for_each(|i| {
                 let char = chars[i * 4 + 1];

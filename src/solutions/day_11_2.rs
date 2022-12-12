@@ -15,7 +15,7 @@ fn get_monkeys(lines: Vec<String>) -> Vec<Monkey> {
     let mut monkeys: Vec<Monkey> = Vec::new();
     for i in 0..8 {
         let monkey_pos = i * 7;
-        let mut value_string = lines[monkey_pos + 2][25..].split(" ").next().unwrap();
+        let mut value_string = lines[monkey_pos + 2][25..].split(' ').next().unwrap();
         if value_string == "old" {
             value_string = "0";
         }

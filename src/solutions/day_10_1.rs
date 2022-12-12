@@ -13,7 +13,7 @@ pub fn solve() -> String {
         }
         cycle += 1;
         if line != "noop" {
-            let increment = line.split(" ").last().unwrap().parse::<i64>().unwrap();
+            let increment = line.split(' ').last().unwrap().parse::<i64>().unwrap();
             if cycles.contains(&cycle) {
                 strength += x * cycle;
             }

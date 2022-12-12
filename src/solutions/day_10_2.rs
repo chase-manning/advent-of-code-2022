@@ -30,7 +30,7 @@ pub fn solve() -> String {
         display.push(is_within_pixel(x, cycle));
         cycle += 1;
         if line != "noop" {
-            let increment = line.split(" ").last().unwrap().parse::<i64>().unwrap();
+            let increment = line.split(' ').last().unwrap().parse::<i64>().unwrap();
             display.push(is_within_pixel(x, cycle));
             cycle += 1;
             x += increment;

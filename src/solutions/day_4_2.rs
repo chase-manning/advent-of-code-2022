@@ -8,7 +8,7 @@ fn is_overlapping(a: (i32, i32), b: (i32, i32)) -> bool {
 }
 
 fn get_range(line: &str) -> (i32, i32) {
-    let mut iter = line.split("-");
+    let mut iter = line.split('-');
     let min = iter.next().unwrap().parse::<i32>().unwrap();
     let max = iter.next().unwrap().parse::<i32>().unwrap();
     (min, max)
