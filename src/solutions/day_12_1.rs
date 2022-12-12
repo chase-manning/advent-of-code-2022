@@ -33,7 +33,7 @@ fn fastest_path(
         .filter(|(x, y)| hills[*x][*y] <= hills[position.0][position.1] + 1)
         .collect::<Vec<_>>()
         .into_iter()
-        .map(|(x, y)| fastest_path(&hills, (x, y), visited, steps + 1))
+        .map(|(x, y)| fastest_path(hills, (x, y), visited, steps + 1))
         .min()
         .unwrap_or(std::usize::MAX)
 }

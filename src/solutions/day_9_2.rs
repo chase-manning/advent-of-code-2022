@@ -57,7 +57,7 @@ pub fn solve() -> String {
             };
 
             tails = get_tails(head, tails);
-            history.push(tails.last().unwrap().clone());
+            history.push(*tails.last().unwrap());
         }
     }
 
