@@ -10,7 +10,7 @@ pub fn solve() -> String {
         let me = iter.next().unwrap();
         total_score += match me {
             "X" => {
-                0 + match { them } {
+                match { them } {
                     "A" => 3,
                     "B" => 1,
                     "C" => 2,
