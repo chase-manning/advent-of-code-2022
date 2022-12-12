@@ -1,4 +1,4 @@
-mod solutions;
+pub mod solutions;
 pub mod utils;
 
 use clap::Parser;
