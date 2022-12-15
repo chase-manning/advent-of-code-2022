@@ -19,4 +19,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Test
-        run: RUST_MIN_STACK=8388608 cargo test
+        run: cargo test --release
