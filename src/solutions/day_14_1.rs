@@ -8,10 +8,10 @@ enum Point {
     Rock,
 }
 
-fn get_points(line: &String) -> Vec<Vec<usize>> {
+fn get_points(line: &str) -> Vec<Vec<usize>> {
     line.split(" -> ")
         .into_iter()
-        .map(|x| x.split(",").map(|x| x.parse::<usize>().unwrap()).collect())
+        .map(|x| x.split(',').map(|x| x.parse::<usize>().unwrap()).collect())
         .collect()
 }
 
@@ -68,7 +68,7 @@ fn move_sand(
 fn add_sand(grid: &mut HashMap<(usize, usize), Point>, bottom: usize) -> bool {
     let mut sand = (500, 0);
     while sand.1 <= bottom {
-        if let Some(new_sand) = move_sand(&grid, sand) {
+        if let Some(new_sand) = move_sand(grid, sand) {
             sand = new_sand;
         } else {
             grid.insert(sand, Point::Sand);
@@ -79,7 +79,7 @@ fn add_sand(grid: &mut HashMap<(usize, usize), Point>, bottom: usize) -> bool {
 }
 
 fn add_all_sand(grid: &mut HashMap<(usize, usize), Point>) {
-    let bottom = rock_floor(&grid);
+    let bottom = rock_floor(grid);
     loop {
         if !add_sand(grid, bottom) {
             break;
