@@ -7,7 +7,6 @@ struct Valve {
     name: String,
     flow_rate: u32,
     paths: Vec<String>,
-    valve_distance: HashMap<String, u32>,
 }
 
 fn shortest_path(
@@ -16,7 +15,11 @@ fn shortest_path(
     end: &String,
     steps: u32,
     visited: Vec<String>,
+    shortest_distances: &mut HashMap<(String, String), u32>,
 ) -> u32 {
+    if let Some(distance) = shortest_distances.get(&(start.clone(), end.clone())) {
+        return steps + *distance;
+    }
     if start == end {
         return steps;
     }
@@ -28,7 +31,14 @@ fn shortest_path(
         }
         let mut visited = visited.clone();
         visited.push(path.clone());
-        let distance = shortest_path(valves, path, end, steps.clone() + 1, visited);
+        let distance = shortest_path(
+            valves,
+            path,
+            end,
+            steps.clone() + 1,
+            visited,
+            shortest_distances,
+        );
         if distance < shortest_distance {
             shortest_distance = distance;
         }
@@ -36,7 +46,10 @@ fn shortest_path(
     shortest_distance
 }
 
-fn get_valves(lines: Vec<String>) -> Vec<Valve> {
+fn get_valves(
+    lines: Vec<String>,
+    shortest_distances: &mut HashMap<(String, String), u32>,
+) -> Vec<Valve> {
     let mut valves = Vec::new();
 
     for line in lines {
@@ -60,23 +73,20 @@ fn get_valves(lines: Vec<String>) -> Vec<Valve> {
             name,
             flow_rate,
             paths,
-            valve_distance: HashMap::new(),
         });
     }
 
-    let valves_copy = valves.clone();
-    let valve_names = valves_copy
+    let valve_names = valves
         .iter()
         .map(|v| v.name.clone())
         .collect::<Vec<String>>();
 
-    println!("valve_names: {:?}", valve_names);
-    for valve in &mut valves {
-        for path in &valve_names {
-            let distance = shortest_path(&valves_copy, &valve.name, path, 0, vec![]);
-            valve.valve_distance.insert(path.clone(), distance);
+    for from_name in &valve_names {
+        for to_name in &valve_names {
+            let shortest_path =
+                shortest_path(&valves, from_name, to_name, 0, vec![], shortest_distances);
+            shortest_distances.insert((from_name.clone(), to_name.clone()), shortest_path);
         }
-        println!("valve: {:?}", valve);
     }
 
     valves
@@ -88,15 +98,13 @@ fn get_max_pressure(
     current_valve_name: String,
     seconds_remaining: u32,
     current_pressure: usize,
+    shortest_distances: &HashMap<(String, String), u32>,
 ) -> usize {
     let mut max_pressure = current_pressure;
-    let current_valve = valves
-        .iter()
-        .find(|v| v.name == current_valve_name)
-        .unwrap();
     for valve_name in unopen_valves.clone() {
         let valve = valves.iter().find(|v| v.name == valve_name).unwrap();
-        let seconds_to_valve = current_valve.valve_distance[&valve_name] + 1;
+        let seconds_to_valve =
+            shortest_distances[&(current_valve_name.clone(), valve_name.clone())] + 1;
         if seconds_to_valve >= seconds_remaining {
             continue;
         }
@@ -109,6 +117,7 @@ fn get_max_pressure(
             valve_name.clone(),
             seconds_remaining,
             current_pressure + (valve.flow_rate as usize * seconds_remaining as usize),
+            shortest_distances,
         );
         if pressure > max_pressure {
             max_pressure = pressure;
@@ -119,20 +128,20 @@ fn get_max_pressure(
 
 pub fn solve() -> String {
     let lines = get_data_as_lines("day_16_valves.txt");
-    let valves = get_valves(lines);
-    println!("{:?}", valves.len());
+    let mut shortest_distances: HashMap<(String, String), u32> = HashMap::new();
+    let valves = get_valves(lines, &mut shortest_distances);
     let pruned_valves: Vec<Valve> = valves
         .iter()
         .filter(|v| v.flow_rate > 0 || v.name == "AA")
         .cloned()
         .collect();
-    println!("{:?}", pruned_valves.len());
     let max_pressure = get_max_pressure(
         &pruned_valves,
         pruned_valves.iter().map(|v| v.name.clone()).collect(),
         String::from("AA"),
         30,
         0,
+        &shortest_distances,
     );
     max_pressure.to_string()
 }
