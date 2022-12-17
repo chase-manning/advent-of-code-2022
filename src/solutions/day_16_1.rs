@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::Instant;
 
 use crate::utils::files::get_data_as_lines;
 
@@ -135,6 +136,7 @@ fn get_max_pressure(
 }
 
 pub fn solve() -> String {
+    let now = Instant::now();
     let lines = get_data_as_lines("day_16_valves.txt");
     let valves = get_valves(lines);
     let shortest_distances = get_shortest_distances(&valves);
@@ -151,6 +153,7 @@ pub fn solve() -> String {
         0,
         &shortest_distances,
     );
+    println!("Runtime: {:.2?}", now.elapsed());
     max_pressure.to_string()
 }
 
