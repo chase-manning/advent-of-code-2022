@@ -54,26 +54,25 @@ fn get_shortest_path(
     }
     let mut shortest_distance = std::u32::MAX;
     let mut shortest_path = Vec::new();
-    // MEOW
     let valve = valves.get(start).unwrap();
     for path in &valve.paths {
         if current_path.contains(path) {
             continue;
         }
-        let mut visited = current_path.clone();
-        visited.push(path.clone());
-        let (distance, visited_) = get_shortest_path(
+        let mut branch_path = current_path.clone();
+        branch_path.push(path.clone());
+        let (distance, new_path) = get_shortest_path(
             valve_names,
             valves,
             path,
             end,
             steps + 1,
-            visited,
+            branch_path,
             shortest_distances,
         );
         if distance < shortest_distance {
             shortest_distance = distance;
-            shortest_path = visited_;
+            shortest_path = new_path;
         }
     }
     (shortest_distance, shortest_path)
@@ -112,23 +111,23 @@ fn get_shortest_distances(
 
 fn get_max_pressure(
     valves: &HashMap<String, Valve>,
-    unopen_valves: Vec<String>,
+    current_closed_valve_names: Vec<String>,
     current_valve_name: String,
     seconds_remaining: u32,
     current_pressure: usize,
     shortest_distances: &HashMap<(String, String), u32>,
 ) -> usize {
     let mut max_pressure = current_pressure;
-    for valve_name in unopen_valves.clone() {
-        let valve = valves.get(&valve_name).unwrap();
+    for valve_name in &current_closed_valve_names {
+        let valve = valves.get(valve_name).unwrap();
         let seconds_to_valve =
             shortest_distances[&(current_valve_name.clone(), valve_name.clone())] + 1;
         if seconds_to_valve >= seconds_remaining {
             continue;
         }
         let seconds_remaining = seconds_remaining - seconds_to_valve;
-        let mut unopen_valves = unopen_valves.clone();
-        unopen_valves.retain(|v| v != &valve_name);
+        let mut unopen_valves = current_closed_valve_names.clone();
+        unopen_valves.retain(|v| v != valve_name);
         let pressure = get_max_pressure(
             valves,
             unopen_valves,
