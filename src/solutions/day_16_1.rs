@@ -115,26 +115,25 @@ fn get_max_pressure(
     current_valve_name: String,
     seconds_remaining: u32,
     current_pressure: usize,
-    shortest_distances: &HashMap<(String, String), u32>,
+    distances: &HashMap<(String, String), u32>,
 ) -> usize {
     let mut max_pressure = current_pressure;
-    for valve_name in &current_closed_valve_names {
+    for (i, valve_name) in current_closed_valve_names.iter().enumerate() {
         let valve = valves.get(valve_name).unwrap();
-        let seconds_to_valve =
-            shortest_distances[&(current_valve_name.clone(), valve_name.clone())] + 1;
+        let seconds_to_valve = distances[&(current_valve_name.clone(), valve_name.clone())] + 1;
         if seconds_to_valve >= seconds_remaining {
             continue;
         }
         let seconds_remaining = seconds_remaining - seconds_to_valve;
-        let mut unopen_valves = current_closed_valve_names.clone();
-        unopen_valves.retain(|v| v != valve_name);
+        let mut branch_closed_valve_names = current_closed_valve_names.clone();
+        branch_closed_valve_names.remove(i);
         let pressure = get_max_pressure(
             valves,
-            unopen_valves,
+            branch_closed_valve_names,
             valve_name.clone(),
             seconds_remaining,
             current_pressure + (valve.flow_rate as usize * seconds_remaining as usize),
-            shortest_distances,
+            distances,
         );
         if pressure > max_pressure {
             max_pressure = pressure;
