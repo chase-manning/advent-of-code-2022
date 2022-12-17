@@ -5,13 +5,13 @@ use crate::utils::files::get_data_as_lines;
 
 #[derive(Debug, Clone)]
 struct Valve {
-    name: String,
     flow_rate: u32,
     paths: Vec<String>,
 }
 
-fn get_valves(lines: Vec<String>) -> Vec<Valve> {
-    let mut valves = Vec::new();
+fn get_valves(lines: Vec<String>) -> (Vec<String>, HashMap<String, Valve>) {
+    let mut valve_names = Vec::new();
+    let mut valves = HashMap::new();
 
     for line in lines {
         let mut parts = line.split(' ');
@@ -30,18 +30,16 @@ fn get_valves(lines: Vec<String>) -> Vec<Valve> {
             .into_iter()
             .map(|s| s.trim_end_matches(',').to_string())
             .collect::<Vec<String>>();
-        valves.push(Valve {
-            name,
-            flow_rate,
-            paths,
-        });
+        valve_names.push(name.clone());
+        valves.insert(name, Valve { flow_rate, paths });
     }
 
-    valves
+    (valve_names, valves)
 }
 
 fn get_shortest_path(
-    valves: &Vec<Valve>,
+    valve_names: &Vec<String>,
+    valves: &HashMap<String, Valve>,
     start: &String,
     end: &String,
     steps: u32,
@@ -56,15 +54,23 @@ fn get_shortest_path(
     }
     let mut shortest_distance = std::u32::MAX;
     let mut shortest_path = Vec::new();
-    let valve = valves.iter().find(|v| v.name == *start).unwrap();
+    // MEOW
+    let valve = valves.get(start).unwrap();
     for path in &valve.paths {
         if current_path.contains(path) {
             continue;
         }
         let mut visited = current_path.clone();
         visited.push(path.clone());
-        let (distance, visited_) =
-            get_shortest_path(valves, path, end, steps + 1, visited, shortest_distances);
+        let (distance, visited_) = get_shortest_path(
+            valve_names,
+            valves,
+            path,
+            end,
+            steps + 1,
+            visited,
+            shortest_distances,
+        );
         if distance < shortest_distance {
             shortest_distance = distance;
             shortest_path = visited_;
@@ -73,16 +79,15 @@ fn get_shortest_path(
     (shortest_distance, shortest_path)
 }
 
-fn get_shortest_distances(valves: &Vec<Valve>) -> HashMap<(String, String), u32> {
+fn get_shortest_distances(
+    valve_names: &Vec<String>,
+    valves: &HashMap<String, Valve>,
+) -> HashMap<(String, String), u32> {
     let mut shortest_distances = HashMap::new();
-    let valve_names = valves
-        .iter()
-        .map(|v| v.name.clone())
-        .collect::<Vec<String>>();
-
-    for from_name in &valve_names {
-        for to_name in &valve_names {
+    for from_name in valve_names {
+        for to_name in valve_names {
             let (distance, path) = get_shortest_path(
+                valve_names,
                 valves,
                 from_name,
                 to_name,
@@ -106,7 +111,7 @@ fn get_shortest_distances(valves: &Vec<Valve>) -> HashMap<(String, String), u32>
 }
 
 fn get_max_pressure(
-    valves: &Vec<Valve>,
+    valves: &HashMap<String, Valve>,
     unopen_valves: Vec<String>,
     current_valve_name: String,
     seconds_remaining: u32,
@@ -115,7 +120,7 @@ fn get_max_pressure(
 ) -> usize {
     let mut max_pressure = current_pressure;
     for valve_name in unopen_valves.clone() {
-        let valve = valves.iter().find(|v| v.name == valve_name).unwrap();
+        let valve = valves.get(&valve_name).unwrap();
         let seconds_to_valve =
             shortest_distances[&(current_valve_name.clone(), valve_name.clone())] + 1;
         if seconds_to_valve >= seconds_remaining {
@@ -139,19 +144,33 @@ fn get_max_pressure(
     max_pressure
 }
 
+fn get_pruned_values(
+    valve_names: &Vec<String>,
+    valves: &HashMap<String, Valve>,
+) -> (Vec<String>, HashMap<String, Valve>) {
+    let mut pruned_names = Vec::new();
+    let mut pruned_valves = HashMap::new();
+
+    for name in valve_names {
+        let valve = valves.get(name).unwrap();
+        if valve.flow_rate > 0 || name == "AA" {
+            pruned_names.push(name.clone());
+            pruned_valves.insert(name.clone(), valve.clone());
+        }
+    }
+
+    (pruned_names, pruned_valves)
+}
+
 pub fn solve() -> String {
     let now = Instant::now();
     let lines = get_data_as_lines("day_16_valves.txt");
-    let valves = get_valves(lines);
-    let shortest_distances = get_shortest_distances(&valves);
-    let pruned_valves: Vec<Valve> = valves
-        .iter()
-        .filter(|v| v.flow_rate > 0 || v.name == "AA")
-        .cloned()
-        .collect();
+    let (valve_names, valves) = get_valves(lines);
+    let shortest_distances = get_shortest_distances(&valve_names, &valves);
+    let (pruned_names, pruned_valves) = get_pruned_values(&valve_names, &valves);
     let max_pressure = get_max_pressure(
         &pruned_valves,
-        pruned_valves.iter().map(|v| v.name.clone()).collect(),
+        pruned_names,
         String::from("AA"),
         30,
         0,
