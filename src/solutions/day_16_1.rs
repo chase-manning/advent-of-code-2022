@@ -46,10 +46,7 @@ fn shortest_path(
     shortest_distance
 }
 
-fn get_valves(
-    lines: Vec<String>,
-    shortest_distances: &mut HashMap<(String, String), u32>,
-) -> Vec<Valve> {
+fn get_valves(lines: Vec<String>) -> Vec<Valve> {
     let mut valves = Vec::new();
 
     for line in lines {
@@ -76,6 +73,11 @@ fn get_valves(
         });
     }
 
+    valves
+}
+
+fn get_shortest_distances(valves: &Vec<Valve>) -> HashMap<(String, String), u32> {
+    let mut shortest_distances = HashMap::new();
     let valve_names = valves
         .iter()
         .map(|v| v.name.clone())
@@ -83,13 +85,19 @@ fn get_valves(
 
     for from_name in &valve_names {
         for to_name in &valve_names {
-            let shortest_path =
-                shortest_path(&valves, from_name, to_name, 0, vec![], shortest_distances);
+            let shortest_path = shortest_path(
+                &valves,
+                from_name,
+                to_name,
+                0,
+                vec![],
+                &mut shortest_distances,
+            );
             shortest_distances.insert((from_name.clone(), to_name.clone()), shortest_path);
         }
     }
 
-    valves
+    shortest_distances
 }
 
 fn get_max_pressure(
@@ -128,8 +136,8 @@ fn get_max_pressure(
 
 pub fn solve() -> String {
     let lines = get_data_as_lines("day_16_valves.txt");
-    let mut shortest_distances: HashMap<(String, String), u32> = HashMap::new();
-    let valves = get_valves(lines, &mut shortest_distances);
+    let valves = get_valves(lines);
+    let shortest_distances = get_shortest_distances(&valves);
     let pruned_valves: Vec<Valve> = valves
         .iter()
         .filter(|v| v.flow_rate > 0 || v.name == "AA")
