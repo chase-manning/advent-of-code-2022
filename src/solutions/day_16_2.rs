@@ -33,14 +33,8 @@ fn get_shortest_path(
         }
         let mut visited = visited.clone();
         visited.push(path.clone());
-        let (distance, visited_) = get_shortest_path(
-            valves,
-            path,
-            end,
-            steps.clone() + 1,
-            visited,
-            shortest_distances,
-        );
+        let (distance, visited_) =
+            get_shortest_path(valves, path, end, steps + 1, visited, shortest_distances);
         if distance < shortest_distance {
             shortest_distance = distance;
             shortest_path = visited_;
@@ -53,13 +47,13 @@ fn get_valves(lines: Vec<String>) -> Vec<Valve> {
     let mut valves = Vec::new();
 
     for line in lines {
-        let mut parts = line.split(" ");
+        let mut parts = line.split(' ');
         let name = parts.nth(1).unwrap().to_string();
         let flow_rate = parts
             .nth(2)
             .unwrap()
-            .trim_end_matches(";")
-            .split("=")
+            .trim_end_matches(';')
+            .split('=')
             .last()
             .unwrap()
             .parse::<u32>()
@@ -67,7 +61,7 @@ fn get_valves(lines: Vec<String>) -> Vec<Valve> {
         let _ = parts.nth(3).unwrap();
         let paths = parts
             .into_iter()
-            .map(|s| s.trim_end_matches(",").to_string())
+            .map(|s| s.trim_end_matches(',').to_string())
             .collect::<Vec<String>>();
         valves.push(Valve {
             name,
@@ -89,7 +83,7 @@ fn get_shortest_distances(valves: &Vec<Valve>) -> HashMap<(String, String), u32>
     for from_name in &valve_names {
         for to_name in &valve_names {
             let (distance, path) = get_shortest_path(
-                &valves,
+                valves,
                 from_name,
                 to_name,
                 0,
@@ -103,7 +97,7 @@ fn get_shortest_distances(valves: &Vec<Valve>) -> HashMap<(String, String), u32>
                 for j in 0..path.len() {
                     let from = path[i].clone();
                     let to = path[j].clone();
-                    let distance = (i as i32 - j as i32).abs() as u32;
+                    let distance = (i as i32 - j as i32).unsigned_abs();
                     shortest_distances.insert((from, to), distance);
                 }
             }
@@ -113,12 +107,14 @@ fn get_shortest_distances(valves: &Vec<Valve>) -> HashMap<(String, String), u32>
     shortest_distances
 }
 
+#[derive(Debug, Clone)]
 struct Path {
     valves: Vec<String>,
-    pressure: u32,
+    pressure: usize,
 }
 
 fn get_nodes(
+    valve_names: &Vec<String>,
     valves: &Vec<Valve>,
     unopen_valves: Vec<String>,
     current_valve_name: String,
@@ -126,8 +122,9 @@ fn get_nodes(
     current_pressure: usize,
     shortest_distances: &HashMap<(String, String), u32>,
     nodes: &mut Vec<Path>,
-) -> usize {
+) -> (usize, Vec<String>) {
     let mut max_pressure = current_pressure;
+    let mut max_unopen_valves = unopen_valves.clone();
     for valve_name in unopen_valves.clone() {
         let valve = valves.iter().find(|v| v.name == valve_name).unwrap();
         let seconds_to_valve =
@@ -136,19 +133,74 @@ fn get_nodes(
             continue;
         }
         let seconds_remaining = seconds_remaining - seconds_to_valve;
-        let mut unopen_valves = unopen_valves.clone();
-        unopen_valves.retain(|v| v != &valve_name);
-        let pressure = get_nodes(
+
+        let mut new_unopen_valves = unopen_valves.clone();
+        new_unopen_valves.retain(|v| v != &valve_name);
+
+        let (pressure, this_unopen_valves) = get_nodes(
+            valve_names,
             valves,
-            unopen_valves,
+            new_unopen_valves,
             valve_name.clone(),
             seconds_remaining,
             current_pressure + (valve.flow_rate as usize * seconds_remaining as usize),
             shortest_distances,
             nodes,
         );
+
         if pressure > max_pressure {
             max_pressure = pressure;
+            max_unopen_valves = this_unopen_valves;
+        }
+    }
+
+    let path_valves = valve_names
+        .iter()
+        .filter(|v| !max_unopen_valves.contains(v))
+        .cloned()
+        .collect();
+
+    let matching_paths = nodes
+        .iter()
+        .filter(|p| p.valves == path_valves)
+        .collect::<Vec<&Path>>();
+
+    if matching_paths.is_empty()
+        || matching_paths.iter().map(|p| p.pressure).max().unwrap() < max_pressure
+    {
+        let path = Path {
+            valves: path_valves,
+            pressure: max_pressure,
+        };
+        nodes.push(path);
+    }
+
+    (max_pressure, max_unopen_valves)
+}
+
+// Find the highest sum of any two nodes where the vavles have no overlap
+fn get_max_pressure(nodes: Vec<Path>) -> usize {
+    let mut max_pressure = 0;
+    for i in 0..nodes.len() {
+        for j in 0..nodes.len() {
+            if i == j {
+                continue;
+            }
+            let pressure = nodes[i].pressure + nodes[j].pressure;
+            if pressure > max_pressure {
+                let mut valves = nodes[i].valves.clone();
+                valves.append(&mut nodes[j].valves.clone());
+                valves.sort();
+                let mut unique_valves = Vec::new();
+                for v in &valves {
+                    if unique_valves.is_empty() || unique_valves.last().unwrap() != &v {
+                        unique_valves.push(v);
+                    }
+                }
+                if unique_valves.len() == valves.len() {
+                    max_pressure = pressure;
+                }
+            }
         }
     }
     max_pressure
@@ -166,7 +218,13 @@ pub fn solve() -> String {
         .collect();
 
     let mut nodes: Vec<Path> = Vec::new();
-    let max_pressure = get_nodes(
+    let mut valve_names = valves
+        .iter()
+        .map(|v| v.name.clone())
+        .collect::<Vec<String>>();
+    valve_names.sort();
+    get_nodes(
+        &valve_names,
         &pruned_valves,
         pruned_valves.iter().map(|v| v.name.clone()).collect(),
         String::from("AA"),
@@ -175,6 +233,8 @@ pub fn solve() -> String {
         &shortest_distances,
         &mut nodes,
     );
+    println!("Nodes: {}", nodes.len());
+    let max_pressure = get_max_pressure(nodes);
     println!("Runtime: {:.2?}", now.elapsed());
     max_pressure.to_string()
 }
