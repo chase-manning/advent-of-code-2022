@@ -10,56 +10,17 @@ struct Valve {
     paths: Vec<String>,
 }
 
-fn get_shortest_path(
-    valves: &Vec<Valve>,
-    start: &String,
-    end: &String,
-    steps: u32,
-    visited: Vec<String>,
-    shortest_distances: &HashMap<(String, String), u32>,
-) -> (u32, Vec<String>) {
-    if start == end {
-        return (steps, visited);
-    }
-    if let Some(distance) = shortest_distances.get(&(start.clone(), end.clone())) {
-        return (steps + *distance, visited);
-    }
-    let mut shortest_distance = std::u32::MAX;
-    let mut shortest_path = Vec::new();
-    let valve = valves.iter().find(|v| v.name == *start).unwrap();
-    for path in &valve.paths {
-        if visited.contains(path) {
-            continue;
-        }
-        let mut visited = visited.clone();
-        visited.push(path.clone());
-        let (distance, visited_) = get_shortest_path(
-            valves,
-            path,
-            end,
-            steps.clone() + 1,
-            visited,
-            shortest_distances,
-        );
-        if distance < shortest_distance {
-            shortest_distance = distance;
-            shortest_path = visited_;
-        }
-    }
-    (shortest_distance, shortest_path)
-}
-
 fn get_valves(lines: Vec<String>) -> Vec<Valve> {
     let mut valves = Vec::new();
 
     for line in lines {
-        let mut parts = line.split(" ");
+        let mut parts = line.split(' ');
         let name = parts.nth(1).unwrap().to_string();
         let flow_rate = parts
             .nth(2)
             .unwrap()
-            .trim_end_matches(";")
-            .split("=")
+            .trim_end_matches(';')
+            .split('=')
             .last()
             .unwrap()
             .parse::<u32>()
@@ -67,7 +28,7 @@ fn get_valves(lines: Vec<String>) -> Vec<Valve> {
         let _ = parts.nth(3).unwrap();
         let paths = parts
             .into_iter()
-            .map(|s| s.trim_end_matches(",").to_string())
+            .map(|s| s.trim_end_matches(',').to_string())
             .collect::<Vec<String>>();
         valves.push(Valve {
             name,
@@ -77,6 +38,39 @@ fn get_valves(lines: Vec<String>) -> Vec<Valve> {
     }
 
     valves
+}
+
+fn get_shortest_path(
+    valves: &Vec<Valve>,
+    start: &String,
+    end: &String,
+    steps: u32,
+    current_path: Vec<String>,
+    shortest_distances: &HashMap<(String, String), u32>,
+) -> (u32, Vec<String>) {
+    if start == end {
+        return (steps, current_path);
+    }
+    if let Some(distance) = shortest_distances.get(&(start.clone(), end.clone())) {
+        return (steps + *distance, current_path);
+    }
+    let mut shortest_distance = std::u32::MAX;
+    let mut shortest_path = Vec::new();
+    let valve = valves.iter().find(|v| v.name == *start).unwrap();
+    for path in &valve.paths {
+        if current_path.contains(path) {
+            continue;
+        }
+        let mut visited = current_path.clone();
+        visited.push(path.clone());
+        let (distance, visited_) =
+            get_shortest_path(valves, path, end, steps + 1, visited, shortest_distances);
+        if distance < shortest_distance {
+            shortest_distance = distance;
+            shortest_path = visited_;
+        }
+    }
+    (shortest_distance, shortest_path)
 }
 
 fn get_shortest_distances(valves: &Vec<Valve>) -> HashMap<(String, String), u32> {
@@ -89,7 +83,7 @@ fn get_shortest_distances(valves: &Vec<Valve>) -> HashMap<(String, String), u32>
     for from_name in &valve_names {
         for to_name in &valve_names {
             let (distance, path) = get_shortest_path(
-                &valves,
+                valves,
                 from_name,
                 to_name,
                 0,
@@ -101,10 +95,8 @@ fn get_shortest_distances(valves: &Vec<Valve>) -> HashMap<(String, String), u32>
 
             for i in 0..path.len() {
                 for j in 0..path.len() {
-                    let from = path[i].clone();
-                    let to = path[j].clone();
-                    let distance = (i as i32 - j as i32).abs() as u32;
-                    shortest_distances.insert((from, to), distance);
+                    let distance = (i as i32 - j as i32).unsigned_abs();
+                    shortest_distances.insert((path[i].clone(), path[j].clone()), distance);
                 }
             }
         }
