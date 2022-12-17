@@ -153,7 +153,7 @@ fn get_pruned_values(
 
     for name in valve_names {
         let valve = valves.get(name).unwrap();
-        if valve.flow_rate > 0 || name == "AA" {
+        if valve.flow_rate > 0 {
             pruned_names.push(name.clone());
             pruned_valves.insert(name.clone(), valve.clone());
         }
