@@ -104,6 +104,10 @@ fn main() {
                 2 => solutions::day_17_2::solve(),
                 _ => panic!("Invalid challenge"),
             },
+            18 => match args.challenge {
+                1 => solutions::day_18_1::solve(),
+                _ => panic!("Invalid challenge"),
+            },
             _ => panic!("Invalid day"),
         }
     );
