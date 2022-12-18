@@ -1,8 +1,8 @@
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 
 use crate::utils::files::get_data_as_lines;
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
 struct Cube {
     x: i32,
     y: i32,
@@ -61,6 +61,7 @@ fn is_air(
     min_z: &i32,
     max_z: &i32,
     visited: &mut Vec<Cube>,
+    is_air_cache: &mut HashMap<Cube, bool>,
 ) -> bool {
     visited.push(cube.clone());
 
@@ -79,7 +80,7 @@ fn is_air(
     let neighbours = get_neighbours(cube);
     let empty_neighbours = neighbours
         .iter()
-        .filter(|n| !cubes.contains(n))
+        .filter(|n| !cubes.contains(n) && !is_air_cache.get(n).unwrap_or(&false))
         .map(|n| n.clone())
         .collect::<Vec<Cube>>();
     let unvisited_neighbours = empty_neighbours
@@ -87,11 +88,23 @@ fn is_air(
         .filter(|n| !visited.contains(*n))
         .collect::<Vec<&Cube>>();
     for n in unvisited_neighbours {
-        if !is_air(n, cubes, min_x, max_x, min_y, max_y, min_z, max_z, visited) {
+        if !is_air(
+            n,
+            cubes,
+            min_x,
+            max_x,
+            min_y,
+            max_y,
+            min_z,
+            max_z,
+            visited,
+            is_air_cache,
+        ) {
             return false;
         }
     }
 
+    is_air_cache.insert(cube.clone(), true);
     true
 }
 
@@ -103,6 +116,8 @@ fn get_air(cubes: &Vec<Cube>) -> Vec<Cube> {
     let min_z = cubes.iter().map(|c| c.z).min().unwrap();
     let max_z = cubes.iter().map(|c| c.z).max().unwrap();
 
+    let mut is_air_cache: HashMap<Cube, bool> = HashMap::new();
+
     let mut air = vec![];
     for x in min_x..=max_x {
         for y in min_y..=max_y {
@@ -111,6 +126,7 @@ fn get_air(cubes: &Vec<Cube>) -> Vec<Cube> {
                 if cubes.contains(&cube) {
                     continue;
                 }
+
                 if is_air(
                     &cube,
                     &cubes,
@@ -121,6 +137,7 @@ fn get_air(cubes: &Vec<Cube>) -> Vec<Cube> {
                     &min_z,
                     &max_z,
                     &mut vec![],
+                    &mut is_air_cache,
                 ) {
                     air.push(cube.clone());
                 }
@@ -145,7 +162,6 @@ pub fn solve() -> String {
     let cubes = get_cubes(lines);
     let mut air = get_air(&cubes);
     air.append(&mut cubes.clone());
-    println!("Got Air: {:.2?}", now.elapsed());
     let surface = get_surface(cubes, air);
     println!("Runtime: {:.2?}", now.elapsed());
     surface.to_string()
