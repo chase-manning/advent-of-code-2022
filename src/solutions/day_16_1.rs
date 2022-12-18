@@ -38,7 +38,6 @@ fn get_valves(lines: Vec<String>) -> (Vec<String>, HashMap<String, Valve>) {
 }
 
 fn get_shortest_path(
-    valve_names: &Vec<String>,
     valves: &HashMap<String, Valve>,
     start: &String,
     end: &String,
@@ -62,7 +61,6 @@ fn get_shortest_path(
         let mut branch_path = current_path.clone();
         branch_path.push(path.clone());
         let (distance, new_path) = get_shortest_path(
-            valve_names,
             valves,
             path,
             end,
@@ -86,7 +84,6 @@ fn get_shortest_distances(
     for from_name in valve_names {
         for to_name in valve_names {
             let (distance, path) = get_shortest_path(
-                valve_names,
                 valves,
                 from_name,
                 to_name,

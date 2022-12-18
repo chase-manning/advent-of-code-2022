@@ -38,7 +38,6 @@ fn get_valves(lines: Vec<String>) -> (Vec<String>, HashMap<String, Valve>) {
 }
 
 fn get_shortest_path(
-    valve_names: &Vec<String>,
     valves: &HashMap<String, Valve>,
     start: &String,
     end: &String,
@@ -62,7 +61,6 @@ fn get_shortest_path(
         let mut branch_path = current_path.clone();
         branch_path.push(path.clone());
         let (distance, new_path) = get_shortest_path(
-            valve_names,
             valves,
             path,
             end,
@@ -86,7 +84,6 @@ fn get_shortest_distances(
     for from_name in valve_names {
         for to_name in valve_names {
             let (distance, path) = get_shortest_path(
-                valve_names,
                 valves,
                 from_name,
                 to_name,
@@ -145,7 +142,7 @@ fn get_paths(
             max_pressure = pressure;
         }
     }
-    let mut sorted_path = current_path.clone();
+    let mut sorted_path = current_path;
     sorted_path.sort();
     paths.push((sorted_path, current_pressure));
     max_pressure
@@ -175,7 +172,7 @@ fn get_best_path_data(
     let mut unique_paths: Vec<Vec<String>> = Vec::new();
     let mut path_data: HashMap<Vec<String>, usize> = HashMap::new();
     for (path, pressure) in paths {
-        if !unique_paths.contains(&path) && path.len() > 0 {
+        if !unique_paths.contains(&path) && !path.is_empty() {
             unique_paths.push(path.clone());
         }
         let current_pressure = path_data.get(&path).unwrap_or(&0);
