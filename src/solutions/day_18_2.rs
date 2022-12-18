@@ -45,7 +45,7 @@ fn get_neighbour_cubes(cube: &Cube, cubes: &Vec<Cube>) -> Vec<Cube> {
     for n in cubes {
         let distance = (cube.x - n.x).abs() + (cube.y - n.y).abs() + (cube.z - n.z).abs();
         if distance == 1 {
-            neighbours.push(n.clone());
+            neighbours.push(*n);
         }
     }
     neighbours
@@ -63,7 +63,7 @@ fn is_air(
     visited: &mut Vec<Cube>,
     is_air_cache: &mut HashMap<Cube, bool>,
 ) -> bool {
-    visited.push(cube.clone());
+    visited.push(*cube);
 
     // Not air if it's on the edge
     if cube.x == *min_x
@@ -80,14 +80,12 @@ fn is_air(
     let neighbours = get_neighbours(cube);
     let empty_neighbours = neighbours
         .iter()
-        .filter(|n| !cubes.contains(n) && !is_air_cache.get(n).unwrap_or(&false))
-        .map(|n| n.clone())
+        .filter(|n| {
+            !cubes.contains(n) && !is_air_cache.get(n).unwrap_or(&false) && !visited.contains(*n)
+        })
+        .copied()
         .collect::<Vec<Cube>>();
-    let unvisited_neighbours = empty_neighbours
-        .iter()
-        .filter(|n| !visited.contains(*n))
-        .collect::<Vec<&Cube>>();
-    for n in unvisited_neighbours {
+    for n in &empty_neighbours {
         if !is_air(
             n,
             cubes,
@@ -104,7 +102,7 @@ fn is_air(
         }
     }
 
-    is_air_cache.insert(cube.clone(), true);
+    is_air_cache.insert(*cube, true);
     true
 }
 
@@ -129,7 +127,7 @@ fn get_air(cubes: &Vec<Cube>) -> Vec<Cube> {
 
                 if is_air(
                     &cube,
-                    &cubes,
+                    cubes,
                     &min_x,
                     &max_x,
                     &min_y,
@@ -139,7 +137,7 @@ fn get_air(cubes: &Vec<Cube>) -> Vec<Cube> {
                     &mut vec![],
                     &mut is_air_cache,
                 ) {
-                    air.push(cube.clone());
+                    air.push(cube);
                 }
             }
         }
