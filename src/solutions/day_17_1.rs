@@ -66,39 +66,6 @@ fn get_movements(lines: Vec<String>) -> Vec<Move> {
         .collect::<Vec<Move>>()
 }
 
-// fn print_grid(
-//     grid: &HashMap<(usize, usize), bool>,
-//     grid_top: &usize,
-//     piece: &Piece,
-//     piece_x: &usize,
-//     piece_y: &usize,
-// ) {
-//     let grid_height = std::cmp::max(piece.height + piece_y, *grid_top) + 1;
-//     let mut grid_print = String::new();
-//     for y in (0..grid_height).rev() {
-//         grid_print.push('|');
-//         for x in 0..7 {
-//             if y >= *piece_y
-//                 && y < piece.height + piece_y
-//                 && x >= *piece_x
-//                 && x < piece.width + piece_x
-//                 && piece.shape[y - piece_y][x - piece_x]
-//             {
-//                 grid_print.push('@');
-//             } else if *grid.get(&(x, y)).unwrap_or(&false) {
-//                 grid_print.push('#');
-//             } else {
-//                 grid_print.push('.');
-//             }
-//         }
-//         grid_print.push('|');
-//         grid_print.push('\n');
-//     }
-//     grid_print.push_str("+-------+");
-//     println!("{}", grid_print);
-//     println!("");
-// }
-
 fn is_colliding(
     grid: &HashMap<(usize, usize), bool>,
     piece: &Piece,
