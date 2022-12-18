@@ -84,39 +84,7 @@ fn is_colliding(
     false
 }
 
-fn grid_cache(grid: &HashMap<(usize, usize), bool>, grid_top: &usize, piece: &Piece) -> String {
-    let cache_depth = 100;
-    let mut s = String::new();
-    let y_start = if *grid_top > cache_depth {
-        *grid_top - cache_depth
-    } else {
-        0
-    };
-    for y in y_start..*grid_top {
-        for x in 0..7 {
-            if let Some(true) = grid.get(&(x, y)) {
-                s.push('#');
-            } else {
-                s.push('.');
-            }
-        }
-    }
-
-    for y in 0..piece.height {
-        for x in 0..piece.width {
-            if piece.shape[y as usize][x as usize] {
-                s.push('@');
-            } else {
-                s.push('_');
-            }
-        }
-    }
-
-    s
-}
-
 fn play_tetris(moves: Vec<Move>) -> usize {
-    let cycle_start = 153;
     let cycle_length = 1695;
     let increase_per_cycle = 2671;
     let target: usize = 1_000_000_000_000;
@@ -128,8 +96,6 @@ fn play_tetris(moves: Vec<Move>) -> usize {
     let mut grid_top = 0;
     let mut rocks_stopped = 0;
     let mut moves_made = 0;
-    let mut cycle_start_top = 0;
-    let mut cycle_end_top = 0;
     while rocks_stopped < remaining {
         let piece = &pieces[rocks_stopped % 5];
         let mut piece_y = grid_top + 3;
