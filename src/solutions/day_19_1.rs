@@ -113,49 +113,38 @@ fn can_build(cost: &Cost, inventory: &Materials) -> bool {
 }
 
 fn can_build_robot(state: &State, blueprint: &Blueprint) -> bool {
-    match state.next_robot {
-        Some(RobotType::Ore) => {
-            return can_build(&blueprint.ore, &state.inventory);
-        }
-        Some(RobotType::Clay) => {
-            return can_build(&blueprint.clay, &state.inventory);
-        }
-        Some(RobotType::Obsidian) => {
-            return can_build(&blueprint.obsidian, &state.inventory);
-        }
-        Some(RobotType::Geode) => {
-            return can_build(&blueprint.geode, &state.inventory);
-        }
-        _ => {
-            return false;
-        }
-    }
+    let robot = match state.next_robot {
+        Some(RobotType::Ore) => &blueprint.ore,
+        Some(RobotType::Clay) => &blueprint.clay,
+        Some(RobotType::Obsidian) => &blueprint.obsidian,
+        Some(RobotType::Geode) => &blueprint.geode,
+        _ => return false,
+    };
+    can_build(robot, &state.inventory)
+}
+
+fn build(state: &mut State, cost: &Cost) {
+    state.inventory.ore -= cost.ore;
+    state.inventory.clay -= cost.clay;
+    state.inventory.obsidian -= cost.obsidian;
 }
 
 fn build_robot(state: &mut State, blueprint: &Blueprint) {
     match state.next_robot {
         Some(RobotType::Ore) => {
-            state.inventory.ore -= blueprint.ore.ore;
-            state.inventory.clay -= blueprint.ore.clay;
-            state.inventory.obsidian -= blueprint.ore.obsidian;
+            build(state, &blueprint.ore);
             state.robots.ore += 1;
         }
         Some(RobotType::Clay) => {
-            state.inventory.ore -= blueprint.clay.ore;
-            state.inventory.clay -= blueprint.clay.clay;
-            state.inventory.obsidian -= blueprint.clay.obsidian;
+            build(state, &blueprint.clay);
             state.robots.clay += 1;
         }
         Some(RobotType::Obsidian) => {
-            state.inventory.ore -= blueprint.obsidian.ore;
-            state.inventory.clay -= blueprint.obsidian.clay;
-            state.inventory.obsidian -= blueprint.obsidian.obsidian;
+            build(state, &blueprint.obsidian);
             state.robots.obsidian += 1;
         }
         Some(RobotType::Geode) => {
-            state.inventory.ore -= blueprint.geode.ore;
-            state.inventory.clay -= blueprint.geode.clay;
-            state.inventory.obsidian -= blueprint.geode.obsidian;
+            build(state, &blueprint.geode);
             state.robots.geode += 1;
         }
         _ => {
@@ -166,17 +155,13 @@ fn build_robot(state: &mut State, blueprint: &Blueprint) {
 
 fn get_quality_level(blueprint: &Blueprint, state: &mut State) -> u32 {
     while state.minutes > 0 {
-        if !state.next_robot.is_some() {
+        if state.next_robot.is_none() {
             return *ROBOT_TYPES
                 .iter()
                 .filter(|robot_type| match **robot_type {
-                    RobotType::Obsidian => {
-                        return state.robots.clay > 0;
-                    }
-                    RobotType::Geode => {
-                        return state.robots.obsidian > 0;
-                    }
-                    _ => return true,
+                    RobotType::Obsidian => state.robots.clay > 0,
+                    RobotType::Geode => state.robots.obsidian > 0,
+                    _ => true,
                 })
                 .map(|robot_type| {
                     let mut path_state = state.clone();
@@ -196,18 +181,13 @@ fn get_quality_level(blueprint: &Blueprint, state: &mut State) -> u32 {
         }
         state.minutes -= 1;
     }
-    // if state.inventory.geode == 22 {
-    //     println!("Found it: {:#?}", state);
-    // }
     state.inventory.geode * blueprint.id
 }
 
 fn get_total_quality_level(blueprints: Vec<Blueprint>) -> u32 {
     let mut total_quality_level = 0;
     for blueprint in blueprints {
-        let meow = get_quality_level(&blueprint, &mut State::new());
-        println!("{}: {}", blueprint.id, meow);
-        total_quality_level += meow;
+        total_quality_level += get_quality_level(&blueprint, &mut State::new());
     }
     total_quality_level
 }
