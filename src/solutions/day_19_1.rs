@@ -2,14 +2,20 @@ use std::time::Instant;
 
 use crate::utils::files::get_data_as_lines;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 enum RobotType {
     Ore,
     Clay,
     Obsidian,
     Geode,
-    None,
 }
+
+const ROBOT_TYPES: [RobotType; 4] = [
+    RobotType::Ore,
+    RobotType::Clay,
+    RobotType::Obsidian,
+    RobotType::Geode,
+];
 
 #[derive(Debug, Clone)]
 struct Materials {
@@ -24,6 +30,7 @@ struct State {
     minutes: u32,
     inventory: Materials,
     robots: Materials,
+    next_robot: Option<RobotType>,
 }
 
 impl State {
@@ -42,6 +49,7 @@ impl State {
                 obsidian: 0,
                 geode: 0,
             },
+            next_robot: None,
         }
     }
 }
@@ -104,79 +112,102 @@ fn can_build(cost: &Cost, inventory: &Materials) -> bool {
     cost.ore <= inventory.ore && cost.clay <= inventory.clay && cost.obsidian <= inventory.obsidian
 }
 
-fn buildable_robots(blueprint: &Blueprint, state: &State) -> Vec<RobotType> {
-    let mut buildable_robots = vec![RobotType::None];
-    if can_build(&blueprint.ore, &state.inventory) {
-        buildable_robots.push(RobotType::Ore);
+fn can_build_robot(state: &State, blueprint: &Blueprint) -> bool {
+    match state.next_robot {
+        Some(RobotType::Ore) => {
+            return can_build(&blueprint.ore, &state.inventory);
+        }
+        Some(RobotType::Clay) => {
+            return can_build(&blueprint.clay, &state.inventory);
+        }
+        Some(RobotType::Obsidian) => {
+            return can_build(&blueprint.obsidian, &state.inventory);
+        }
+        Some(RobotType::Geode) => {
+            return can_build(&blueprint.geode, &state.inventory);
+        }
+        _ => {
+            return false;
+        }
     }
-    if can_build(&blueprint.clay, &state.inventory) {
-        buildable_robots.push(RobotType::Clay);
-    }
-    if can_build(&blueprint.obsidian, &state.inventory) {
-        buildable_robots.push(RobotType::Obsidian);
-    }
-    if can_build(&blueprint.geode, &state.inventory) {
-        buildable_robots.push(RobotType::Geode);
-    }
-    buildable_robots
 }
 
-fn build_robot(robot_type: &RobotType, state: &mut State, blueprint: &Blueprint) {
-    match robot_type {
-        RobotType::Ore => {
+fn build_robot(state: &mut State, blueprint: &Blueprint) {
+    match state.next_robot {
+        Some(RobotType::Ore) => {
             state.inventory.ore -= blueprint.ore.ore;
             state.inventory.clay -= blueprint.ore.clay;
             state.inventory.obsidian -= blueprint.ore.obsidian;
             state.robots.ore += 1;
         }
-        RobotType::Clay => {
+        Some(RobotType::Clay) => {
             state.inventory.ore -= blueprint.clay.ore;
             state.inventory.clay -= blueprint.clay.clay;
             state.inventory.obsidian -= blueprint.clay.obsidian;
             state.robots.clay += 1;
         }
-        RobotType::Obsidian => {
+        Some(RobotType::Obsidian) => {
             state.inventory.ore -= blueprint.obsidian.ore;
             state.inventory.clay -= blueprint.obsidian.clay;
             state.inventory.obsidian -= blueprint.obsidian.obsidian;
             state.robots.obsidian += 1;
         }
-        RobotType::Geode => {
+        Some(RobotType::Geode) => {
             state.inventory.ore -= blueprint.geode.ore;
             state.inventory.clay -= blueprint.geode.clay;
             state.inventory.obsidian -= blueprint.geode.obsidian;
             state.robots.geode += 1;
         }
-        RobotType::None => {}
+        _ => {
+            panic!("No robot to build");
+        }
     }
 }
 
 fn get_quality_level(blueprint: &Blueprint, state: &mut State) -> u32 {
-    // If it's the last minute just harvest and return
-    state.minutes -= 1;
-    if state.minutes == 0 {
+    while state.minutes > 0 {
+        if !state.next_robot.is_some() {
+            return *ROBOT_TYPES
+                .iter()
+                .filter(|robot_type| match **robot_type {
+                    RobotType::Obsidian => {
+                        return state.robots.clay > 0;
+                    }
+                    RobotType::Geode => {
+                        return state.robots.obsidian > 0;
+                    }
+                    _ => return true,
+                })
+                .map(|robot_type| {
+                    let mut path_state = state.clone();
+                    path_state.next_robot = Some(*robot_type);
+                    get_quality_level(blueprint, &mut path_state)
+                })
+                .collect::<Vec<u32>>()
+                .iter()
+                .max()
+                .unwrap();
+        }
+        let can_build = can_build_robot(state, blueprint);
         harvest_resources(state);
-        return state.inventory.geode * blueprint.id;
+        if can_build {
+            build_robot(state, blueprint);
+            state.next_robot = None;
+        }
+        state.minutes -= 1;
     }
-
-    // Otherwise build some robots
-    let buildable_robots = buildable_robots(blueprint, state);
-    harvest_resources(state);
-    buildable_robots
-        .iter()
-        .map(|robot_type| {
-            let mut path_state = state.clone();
-            build_robot(robot_type, &mut path_state, blueprint);
-            get_quality_level(blueprint, &mut path_state)
-        })
-        .max()
-        .unwrap()
+    // if state.inventory.geode == 22 {
+    //     println!("Found it: {:#?}", state);
+    // }
+    state.inventory.geode * blueprint.id
 }
 
 fn get_total_quality_level(blueprints: Vec<Blueprint>) -> u32 {
     let mut total_quality_level = 0;
     for blueprint in blueprints {
-        total_quality_level += get_quality_level(&blueprint, &mut State::new());
+        let meow = get_quality_level(&blueprint, &mut State::new());
+        println!("{}: {}", blueprint.id, meow);
+        total_quality_level += meow;
     }
     total_quality_level
 }
@@ -192,5 +223,5 @@ pub fn solve() -> String {
 
 #[test]
 fn result() {
-    assert_eq!(solve(), "2610");
+    assert_eq!(solve(), "1962");
 }
