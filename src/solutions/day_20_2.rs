@@ -23,15 +23,21 @@ fn move_numbers(numbers: &mut Vec<Number>) {
     let len = numbers.len();
     while i < len {
         let pos = numbers.iter().position(|number| number.index == i).unwrap();
+        if numbers[pos].value == 0 {
+            i += 1;
+            continue;
+        }
         let number = numbers.remove(pos);
         let mut new_pos = pos as isize + number.value;
-        while new_pos <= 0 {
-            new_pos += len as isize - 1;
+        if new_pos <= 0 {
+            let mul = (new_pos.abs() / (len as isize - 1)) + 1;
+            new_pos += mul * (len as isize - 1);
         }
-        while new_pos >= len as isize {
-            new_pos -= len as isize - 1;
+        if new_pos >= len as isize {
+            let mul = new_pos / (len as isize - 1);
+            new_pos -= mul * (len as isize - 1);
         }
-        numbers.insert(new_pos as usize % len, number);
+        numbers.insert(new_pos as usize, number);
         i += 1;
     }
 }

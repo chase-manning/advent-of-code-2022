@@ -31,7 +31,7 @@ fn move_numbers(numbers: &mut Vec<Number>) {
         while new_pos >= len as i32 {
             new_pos -= len as i32 - 1;
         }
-        numbers.insert(new_pos as usize % len, number);
+        numbers.insert(new_pos as usize, number);
         i += 1;
     }
 }
