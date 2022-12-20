@@ -68,34 +68,51 @@ struct Blueprint {
     clay: Cost,
     obsidian: Cost,
     geode: Cost,
+    max_ore: u32,
+    max_clay: u32,
+    max_obsidian: u32,
 }
 
 fn get_blueprints(lines: Vec<String>) -> Vec<Blueprint> {
     let mut blueprints = vec![];
     for (i, line) in lines.iter().enumerate() {
         let mut parts = line.split(' ');
+        let ore = Cost {
+            ore: parts.nth(6).unwrap().parse::<u32>().unwrap(),
+            clay: 0,
+            obsidian: 0,
+        };
+        let clay = Cost {
+            ore: parts.nth(5).unwrap().parse::<u32>().unwrap(),
+            clay: 0,
+            obsidian: 0,
+        };
+        let obsidian = Cost {
+            ore: parts.nth(5).unwrap().parse::<u32>().unwrap(),
+            clay: parts.nth(2).unwrap().parse::<u32>().unwrap(),
+            obsidian: 0,
+        };
+        let geode = Cost {
+            ore: parts.nth(5).unwrap().parse::<u32>().unwrap(),
+            clay: 0,
+            obsidian: parts.nth(2).unwrap().parse::<u32>().unwrap(),
+        };
+        let max_clay = obsidian.clay;
+        let max_ore = std::cmp::max(
+            geode.ore,
+            std::cmp::max(ore.ore, std::cmp::max(clay.ore, obsidian.ore)),
+        );
+        let max_obsidian = geode.obsidian;
+
         blueprints.push(Blueprint {
             id: i as u32 + 1,
-            ore: Cost {
-                ore: parts.nth(6).unwrap().parse::<u32>().unwrap(),
-                clay: 0,
-                obsidian: 0,
-            },
-            clay: Cost {
-                ore: parts.nth(5).unwrap().parse::<u32>().unwrap(),
-                clay: 0,
-                obsidian: 0,
-            },
-            obsidian: Cost {
-                ore: parts.nth(5).unwrap().parse::<u32>().unwrap(),
-                clay: parts.nth(2).unwrap().parse::<u32>().unwrap(),
-                obsidian: 0,
-            },
-            geode: Cost {
-                ore: parts.nth(5).unwrap().parse::<u32>().unwrap(),
-                clay: 0,
-                obsidian: parts.nth(2).unwrap().parse::<u32>().unwrap(),
-            },
+            ore,
+            clay,
+            obsidian,
+            geode,
+            max_clay,
+            max_ore,
+            max_obsidian,
         });
     }
     blueprints
@@ -153,16 +170,27 @@ fn build_robot(state: &mut State, blueprint: &Blueprint) {
     }
 }
 
+fn get_robot_type_options(state: &State, blueprint: &Blueprint) -> Vec<RobotType> {
+    ROBOT_TYPES
+        .iter()
+        .filter(|robot_type| match **robot_type {
+            RobotType::Obsidian => {
+                state.robots.clay > 0 && state.inventory.obsidian <= blueprint.max_obsidian
+            }
+            RobotType::Geode => state.robots.obsidian > 0,
+            RobotType::Ore => state.inventory.ore <= blueprint.max_ore,
+            RobotType::Clay => state.inventory.clay <= blueprint.max_clay,
+        })
+        .map(|robot_type| *robot_type)
+        .collect()
+}
+
 fn get_quality_level(blueprint: &Blueprint, state: &mut State) -> u32 {
     while state.minutes > 0 {
         if state.next_robot.is_none() {
-            return *ROBOT_TYPES
+            let options = get_robot_type_options(state, blueprint);
+            return *options
                 .iter()
-                .filter(|robot_type| match **robot_type {
-                    RobotType::Obsidian => state.robots.clay > 0,
-                    RobotType::Geode => state.robots.obsidian > 0,
-                    _ => true,
-                })
                 .map(|robot_type| {
                     let mut path_state = state.clone();
                     path_state.next_robot = Some(*robot_type);
