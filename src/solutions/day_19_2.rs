@@ -63,19 +63,16 @@ struct Cost {
 
 #[derive(Debug)]
 struct Blueprint {
-    id: u32,
     ore: Cost,
     clay: Cost,
     obsidian: Cost,
     geode: Cost,
     max_ore: u32,
-    max_clay: u32,
-    max_obsidian: u32,
 }
 
 fn get_blueprints(lines: Vec<String>) -> Vec<Blueprint> {
     let mut blueprints = vec![];
-    for (i, line) in lines.iter().enumerate() {
+    for line in lines {
         let mut parts = line.split(' ');
         let ore = Cost {
             ore: parts.nth(6).unwrap().parse::<u32>().unwrap(),
@@ -97,22 +94,17 @@ fn get_blueprints(lines: Vec<String>) -> Vec<Blueprint> {
             clay: 0,
             obsidian: parts.nth(2).unwrap().parse::<u32>().unwrap(),
         };
-        let max_clay = obsidian.clay;
         let max_ore = std::cmp::max(
             geode.ore,
             std::cmp::max(ore.ore, std::cmp::max(clay.ore, obsidian.ore)),
         );
-        let max_obsidian = geode.obsidian;
 
         blueprints.push(Blueprint {
-            id: i as u32 + 1,
             ore,
             clay,
             obsidian,
             geode,
-            max_clay,
             max_ore,
-            max_obsidian,
         });
     }
     blueprints
@@ -175,13 +167,13 @@ fn get_robot_type_options(state: &State, blueprint: &Blueprint) -> Vec<RobotType
         .iter()
         .filter(|robot_type| match **robot_type {
             RobotType::Obsidian => {
-                state.robots.clay > 0 && state.inventory.obsidian <= blueprint.max_obsidian
+                state.robots.clay > 0 && state.inventory.obsidian <= blueprint.geode.obsidian + 2
             }
             RobotType::Geode => state.robots.obsidian > 0,
-            RobotType::Ore => state.inventory.ore <= blueprint.max_ore,
-            RobotType::Clay => true,
+            RobotType::Ore => state.inventory.ore <= blueprint.max_ore + 2,
+            RobotType::Clay => state.inventory.clay <= blueprint.obsidian.clay + 2,
         })
-        .map(|robot_type| *robot_type)
+        .copied()
         .collect()
 }
 
@@ -215,8 +207,7 @@ fn get_quality_level(blueprint: &Blueprint, state: &mut State) -> u32 {
 fn get_total_quality_level(blueprints: Vec<Blueprint>) -> u32 {
     let mut total_quality_level = 1;
     for blueprint in blueprints[..3].iter() {
-        println!("Blueprint: {}", blueprint.id);
-        total_quality_level *= get_quality_level(&blueprint, &mut State::new());
+        total_quality_level *= get_quality_level(blueprint, &mut State::new());
     }
     total_quality_level
 }

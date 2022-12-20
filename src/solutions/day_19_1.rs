@@ -181,7 +181,7 @@ fn get_robot_type_options(state: &State, blueprint: &Blueprint) -> Vec<RobotType
             RobotType::Ore => state.inventory.ore <= blueprint.max_ore,
             RobotType::Clay => state.inventory.clay <= blueprint.max_clay,
         })
-        .map(|robot_type| *robot_type)
+        .copied()
         .collect()
 }
 
