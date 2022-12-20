@@ -19,12 +19,10 @@ fn get_numbers(lines: Vec<String>) -> Vec<Number> {
 }
 
 fn move_numbers(numbers: &mut Vec<Number>) {
-    let mut i = 0;
     let len = numbers.len();
-    while i < len {
+    for i in 0..len {
         let pos = numbers.iter().position(|number| number.index == i).unwrap();
         if numbers[pos].value == 0 {
-            i += 1;
             continue;
         }
         let number = numbers.remove(pos);
@@ -38,7 +36,6 @@ fn move_numbers(numbers: &mut Vec<Number>) {
             new_pos -= mul * (len as isize - 1);
         }
         numbers.insert(new_pos as usize, number);
-        i += 1;
     }
 }
 
@@ -64,5 +61,5 @@ pub fn solve() -> String {
 
 #[test]
 fn result() {
-    assert_eq!(solve(), "11616");
+    assert_eq!(solve(), "9937909178485");
 }

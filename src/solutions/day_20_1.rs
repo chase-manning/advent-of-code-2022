@@ -19,9 +19,8 @@ fn get_numbers(lines: Vec<String>) -> Vec<Number> {
 }
 
 fn move_numbers(numbers: &mut Vec<Number>) {
-    let mut i = 0;
     let len = numbers.len();
-    while i < len {
+    for i in 0..len {
         let pos = numbers.iter().position(|number| number.index == i).unwrap();
         let number = numbers.remove(pos);
         let mut new_pos = pos as i32 + number.value;
@@ -32,7 +31,6 @@ fn move_numbers(numbers: &mut Vec<Number>) {
             new_pos -= len as i32 - 1;
         }
         numbers.insert(new_pos as usize, number);
-        i += 1;
     }
 }
 
