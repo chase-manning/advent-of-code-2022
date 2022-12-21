@@ -29,8 +29,8 @@ struct FlatNode {
 fn get_flat_nodes(lines: Vec<String>) -> Vec<FlatNode> {
     let mut nodes = Vec::new();
     for line in lines {
-        let mut parts = line.split(" ");
-        let name = parts.next().unwrap().to_string().replace(":", "");
+        let mut parts = line.split(' ');
+        let name = parts.next().unwrap().to_string().replace(':', "");
         let next = parts.next().unwrap();
         let operation_string = parts.next();
         if operation_string.is_none() {
