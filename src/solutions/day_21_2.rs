@@ -9,7 +9,6 @@ enum Operation {
     Sub,
     Div,
     Ret,
-    Eql,
 }
 
 #[derive(Debug, Clone)]
@@ -51,9 +50,6 @@ fn get_flat_nodes(lines: Vec<String>) -> Vec<FlatNode> {
             "/" => Operation::Div,
             _ => panic!("Unknown operation"),
         };
-        if nodes.len() == 0 {
-            let operation = Operation::Eql;
-        }
         let second_child = parts.next().unwrap().to_string();
         nodes.push(FlatNode {
             name,
@@ -89,7 +85,6 @@ fn get_total(nodes: &Node) -> isize {
         Operation::Sub => get_total(&nodes.children[0]) - get_total(&nodes.children[1]),
         Operation::Div => get_total(&nodes.children[0]) / get_total(&nodes.children[1]),
         Operation::Ret => nodes.value,
-        Operation::Eql => panic!("Eql should not be used here"),
     }
 }
 
@@ -97,7 +92,7 @@ fn path_to_humn(node: &Node, current_path: Vec<usize>) -> (bool, Vec<usize>) {
     if node.name == "humn" {
         return (true, current_path);
     }
-    if node.children.len() == 0 {
+    if node.children.is_empty() {
         return (false, vec![]);
     }
     let first_path = path_to_humn(&node.children[0], [&current_path[..], &[0]].concat());
@@ -121,7 +116,6 @@ fn invert_total(node: &Node, side: usize, output: isize) -> isize {
             Operation::Sub => output + other_input,
             Operation::Div => output * other_input,
             Operation::Ret => panic!("Ret should not be used here"),
-            Operation::Eql => panic!("Eql should not be used here"),
         }
     } else {
         match node.operation {
@@ -130,32 +124,35 @@ fn invert_total(node: &Node, side: usize, output: isize) -> isize {
             Operation::Sub => -(output - other_input),
             Operation::Div => other_input / output,
             Operation::Ret => panic!("Ret should not be used here"),
-            Operation::Eql => panic!("Eql should not be used here"),
         }
     }
 }
 
 fn get_humn_value(node: &Node, path: Vec<usize>, output: isize) -> isize {
-    if path.len() == 0 {
+    if path.is_empty() {
         return output;
     }
     let side = path[0];
-    let new_output = invert_total(node, side, output);
-    let new_path = path[1..].to_vec();
-    get_humn_value(&node.children[side], new_path, new_output)
+    get_humn_value(
+        &node.children[side],
+        path[1..].to_vec(),
+        invert_total(node, side, output),
+    )
 }
 
 pub fn solve() -> String {
     let now = Instant::now();
     let lines = get_data_as_lines("day_21_monkeys.txt");
-    let flat_nodes = get_flat_nodes(lines);
-    let nodes = get_node(String::from("root"), &flat_nodes);
+    let nodes = get_node(String::from("root"), &get_flat_nodes(lines));
 
     let path_to_human = path_to_humn(&nodes, vec![]).1;
-    let target = get_total(&nodes.children[1 - path_to_human[0]]);
     let side = path_to_human[0];
-    let new_path = path_to_human[1..].to_vec();
-    let humn_value = get_humn_value(&nodes.children[side], new_path, target);
+    let humn_value = get_humn_value(
+        &nodes.children[side],
+        path_to_human[1..].to_vec(),
+        get_total(&nodes.children[1 - side]),
+    );
+
     println!("Runtime: {:.2?}", now.elapsed());
     humn_value.to_string()
 }
