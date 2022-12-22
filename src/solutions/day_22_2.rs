@@ -197,16 +197,6 @@ fn get_direction_vector(direction: &char) -> (isize, isize) {
     }
 }
 
-fn invert_direction(direction: &char) -> char {
-    match direction {
-        'U' => 'D',
-        'D' => 'U',
-        'L' => 'R',
-        'R' => 'L',
-        _ => panic!("Unknown direction"),
-    }
-}
-
 fn requires_teleport(map: &Vec<Vec<Square>>, position: &mut Position) -> bool {
     position.x >= map[0].len() as isize
         || position.y >= map.len() as isize
@@ -215,13 +205,8 @@ fn requires_teleport(map: &Vec<Vec<Square>>, position: &mut Position) -> bool {
         || Square::Air == map[position.y as usize][position.x as usize]
 }
 
-fn teleport(
-    map: &Vec<Vec<Square>>,
-    position: &mut Position,
-    portals: &HashMap<(isize, isize), Position>,
-) {
+fn teleport(position: &mut Position, portals: &HashMap<(isize, isize), Position>) {
     let (x, y) = (position.x, position.y);
-    println!("{:#?}", (x, y));
     let new_position = portals.get(&(x, y)).unwrap();
     position.x = new_position.x;
     position.y = new_position.y;
@@ -238,7 +223,7 @@ fn move_one_step(
     position.x += vector.0;
     position.y += vector.1;
     if requires_teleport(map, position) {
-        teleport(map, position, portals);
+        teleport(position, portals);
     }
 }
 
@@ -276,18 +261,11 @@ fn update_direction(position: &mut Position, direction: &Option<char>) {
     }
 }
 
-fn complete_map(
-    map: &Vec<Vec<Square>>,
-    movements: &Vec<Movement>,
-    position: &mut Position,
-    path: &mut Vec<Position>,
-) {
+fn complete_map(map: &Vec<Vec<Square>>, movements: &Vec<Movement>, position: &mut Position) {
     let portals = get_portals();
     for movement in movements {
         'stepping: for _ in 0..movement.steps {
-            path.push(position.clone());
-            // print_map(map, path);
-            let pos_before = position.clone();
+            let pos_before = *position;
             move_one_step(map, &position.direction.clone(), position, &portals);
             if is_colliding(map, position) {
                 *position = pos_before;
@@ -309,42 +287,13 @@ fn get_password(position: &Position) -> isize {
     1000 * (position.y + 1) + 4 * (position.x + 1) + direction_score
 }
 
-fn print_map(map: &[Vec<Square>], path: &Vec<Position>) {
-    for (y, row) in map.iter().enumerate() {
-        for (x, square) in row.iter().enumerate() {
-            let path = path
-                .iter()
-                .filter(|p| p.x == x as isize && p.y == y as isize);
-            if path.clone().count() > 0 {
-                match path.last().unwrap().direction {
-                    'U' => print!("^"),
-                    'D' => print!("v"),
-                    'L' => print!("<"),
-                    'R' => print!(">"),
-                    _ => panic!("Unknown direction"),
-                }
-            } else {
-                match square {
-                    Square::Wall => print!("#"),
-                    Square::Air => print!(" "),
-                    Square::Grid => print!("."),
-                }
-            }
-        }
-        println!();
-    }
-    println!();
-}
-
 pub fn solve() -> String {
     let now = Instant::now();
     let lines = get_data_as_lines("day_22_password.txt");
-    let mut path = Vec::new();
 
     let (map, movements) = get_map_and_movements(lines);
     let mut position = get_starting_position(&map);
-    complete_map(&map, &movements, &mut position, &mut path);
-    // print_map(&map, &path);
+    complete_map(&map, &movements, &mut position);
     let password = get_password(&position);
 
     println!("Runtime: {:.2?}", now.elapsed());
@@ -353,5 +302,5 @@ pub fn solve() -> String {
 
 #[test]
 fn result() {
-    assert_eq!(solve(), "122082");
+    assert_eq!(solve(), "134076");
 }
