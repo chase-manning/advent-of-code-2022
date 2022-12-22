@@ -42,7 +42,7 @@ fn get_map(lines: &Vec<String>) -> Vec<Vec<Square>> {
     map
 }
 
-fn get_movements(line: &String) -> Vec<Movement> {
+fn get_movements(line: &str) -> Vec<Movement> {
     let mut movements = Vec::new();
     let chars = line.chars();
     let mut steps = 0;
@@ -66,14 +66,14 @@ fn get_movements(line: &String) -> Vec<Movement> {
 }
 
 fn get_map_and_movements(lines: Vec<String>) -> (Vec<Vec<Square>>, Vec<Movement>) {
-    let sep = lines.iter().position(|l| l.len() == 0).unwrap();
+    let sep = lines.iter().position(|l| l.is_empty()).unwrap();
     (
         get_map(&lines[0..sep].to_vec()),
         get_movements(&lines[sep + 1].to_string()),
     )
 }
 
-fn get_starting_position(map: &Vec<Vec<Square>>) -> Position {
+fn get_starting_position(map: &[Vec<Square>]) -> Position {
     for (i, square) in map[0].iter().enumerate() {
         if let Square::Grid = square {
             return Position {
@@ -116,11 +116,11 @@ fn requires_teleport(map: &Vec<Vec<Square>>, position: &mut Position) -> bool {
 
 fn teleport(map: &Vec<Vec<Square>>, position: &mut Position, vector: &(isize, isize)) {
     loop {
-        position.x = position.x - vector.0;
-        position.y = position.y - vector.1;
+        position.x -= vector.0;
+        position.y -= vector.1;
         if requires_teleport(map, position) {
-            position.x = position.x + vector.0;
-            position.y = position.y + vector.1;
+            position.x += vector.0;
+            position.y += vector.1;
             break;
         }
     }
@@ -128,18 +128,15 @@ fn teleport(map: &Vec<Vec<Square>>, position: &mut Position, vector: &(isize, is
 
 fn move_one_step(map: &Vec<Vec<Square>>, direction: &char, position: &mut Position) {
     let vector = get_direction_vector(direction);
-    position.x = position.x + vector.0;
-    position.y = position.y + vector.1;
+    position.x += vector.0;
+    position.y += vector.1;
     if requires_teleport(map, position) {
         teleport(map, position, &vector);
     }
 }
 
-fn is_colliding(map: &Vec<Vec<Square>>, position: &Position) -> bool {
-    match map[position.y as usize][position.x as usize] {
-        Square::Wall => true,
-        _ => false,
-    }
+fn is_colliding(map: &[Vec<Square>], position: &Position) -> bool {
+    matches!(map[position.y as usize][position.x as usize], Square::Wall)
 }
 
 fn update_direction(position: &mut Position, direction: &Option<char>) {
@@ -211,5 +208,5 @@ pub fn solve() -> String {
 
 #[test]
 fn result() {
-    assert_eq!(solve(), "3759566892641");
+    assert_eq!(solve(), "122082");
 }
