@@ -1,6 +1,14 @@
 use crate::utils::files::get_data_as_lines;
 use std::{collections::HashMap, time::Instant};
 
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
+enum Dir {
+    N,
+    E,
+    S,
+    W,
+}
+
 fn get_elves(lines: Vec<String>) -> Vec<(isize, isize)> {
     let mut elves = Vec::new();
     for (y, line) in lines.iter().enumerate() {
@@ -15,40 +23,38 @@ fn get_elves(lines: Vec<String>) -> Vec<(isize, isize)> {
     elves
 }
 
-fn can_propose_direction(elves: &[(isize, isize)], elf: &(isize, isize), direction: &char) -> bool {
+fn can_propose_direction(elves: &[(isize, isize)], elf: &(isize, isize), direction: &Dir) -> bool {
     let (a, b, c) = match direction {
-        'N' => (
+        Dir::N => (
             (elf.0, elf.1 - 1),
             (elf.0 - 1, elf.1 - 1),
             (elf.0 + 1, elf.1 - 1),
         ),
-        'E' => (
+        Dir::E => (
             (elf.0 + 1, elf.1),
             (elf.0 + 1, elf.1 - 1),
             (elf.0 + 1, elf.1 + 1),
         ),
-        'S' => (
+        Dir::S => (
             (elf.0, elf.1 + 1),
             (elf.0 - 1, elf.1 + 1),
             (elf.0 + 1, elf.1 + 1),
         ),
-        'W' => (
+        Dir::W => (
             (elf.0 - 1, elf.1),
             (elf.0 - 1, elf.1 - 1),
             (elf.0 - 1, elf.1 + 1),
         ),
-        _ => panic!("Unknown direction"),
     };
     !elves.iter().any(|e| e == &a || e == &b || e == &c)
 }
 
-fn get_position_after_move(elf: &(isize, isize), direction: &char) -> (isize, isize) {
+fn get_position_after_move(elf: &(isize, isize), direction: &Dir) -> (isize, isize) {
     match direction {
-        'N' => (elf.0, elf.1 - 1),
-        'E' => (elf.0 + 1, elf.1),
-        'S' => (elf.0, elf.1 + 1),
-        'W' => (elf.0 - 1, elf.1),
-        _ => panic!("Unknown direction"),
+        Dir::N => (elf.0, elf.1 - 1),
+        Dir::E => (elf.0 + 1, elf.1),
+        Dir::S => (elf.0, elf.1 + 1),
+        Dir::W => (elf.0 - 1, elf.1),
     }
 }
 
@@ -59,15 +65,13 @@ fn is_alone(elves: &[(isize, isize)], elf: &(isize, isize)) -> bool {
 }
 
 fn move_elves(elves: &mut [(isize, isize)]) -> usize {
-    let directions = vec!['N', 'S', 'W', 'E'];
+    let directions = vec![Dir::N, Dir::S, Dir::W, Dir::E];
     let mut iterations = 0;
     'main: loop {
         let mut elf_proposals: HashMap<(isize, isize), (isize, isize)> = HashMap::new();
         let mut proposed_count: HashMap<(isize, isize), usize> = HashMap::new();
-        let mut alone_elves = 0;
         for elf in elves.iter() {
             if is_alone(elves, elf) {
-                alone_elves += 1;
                 continue;
             }
             for j in 0..4 {
@@ -80,15 +84,15 @@ fn move_elves(elves: &mut [(isize, isize)]) -> usize {
                 }
             }
         }
+        iterations += 1;
+        if elf_proposals.is_empty() {
+            break 'main;
+        }
         for (elf, position) in &elf_proposals {
             if proposed_count.get(position).unwrap() == &1 {
                 let index = elves.iter().position(|e| e == elf).unwrap();
                 elves[index] = *position;
             }
-        }
-        iterations += 1;
-        if alone_elves == elves.len() {
-            break 'main;
         }
     }
     iterations
@@ -107,5 +111,5 @@ pub fn solve() -> String {
 
 #[test]
 fn result() {
-    assert_eq!(solve(), "3996");
+    assert_eq!(solve(), "908");
 }
