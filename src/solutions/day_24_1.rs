@@ -1,11 +1,10 @@
 use crate::utils::files::get_data_as_lines;
-use std::{char::MAX, collections::HashMap, time::Instant};
+use std::time::Instant;
 
 const MAX_X: usize = 100;
 const MAX_Y: usize = 35;
 const ENTRANCE: (isize, isize) = (0, -1);
 const EXIT: (isize, isize) = (MAX_X as isize - 1, MAX_Y as isize);
-const MAX_PATHS: usize = 20000;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 enum Dir {
@@ -22,164 +21,72 @@ struct Blizzard {
     dir: Dir,
 }
 
-fn get_blizzards(lines: Vec<String>) -> Vec<Blizzard> {
-    let mut Blizzards = Vec::new();
-    for (y, line) in lines.iter().enumerate() {
-        for (x, c) in line.chars().enumerate() {
-            match c {
-                '^' => Blizzards.push(Blizzard {
-                    x: x - 1,
-                    y: y - 1,
-                    dir: Dir::U,
-                }),
-                'v' => Blizzards.push(Blizzard {
-                    x: x - 1,
-                    y: y - 1,
-                    dir: Dir::D,
-                }),
-                '<' => Blizzards.push(Blizzard {
-                    x: x - 1,
-                    y: y - 1,
-                    dir: Dir::L,
-                }),
-                '>' => Blizzards.push(Blizzard {
-                    x: x - 1,
-                    y: y - 1,
-                    dir: Dir::R,
-                }),
-                '.' => (),
-                '#' => (),
-                _ => panic!("Unknown square"),
-            };
-        }
+impl Blizzard {
+    pub fn new(x: usize, y: usize, dir: Dir) -> Blizzard {
+        Blizzard { x, y, dir }
     }
-    Blizzards
 }
 
-fn print_blizzards(blizzards: &Vec<Blizzard>, expedition: &(isize, isize)) {
-    (0..(MAX_X + 2)).for_each(|i| {
-        if expedition.1 == -1 && expedition.0 == i as isize - 1 {
-            print!("E");
-            return;
-        }
-        if i == 1 {
-            print!(".");
-        } else {
-            print!("#");
-        }
-    });
-    println!();
-    for y in 0..MAX_Y {
-        print!("#");
-        for x in 0..MAX_X {
-            if x as isize == expedition.0 && y as isize == expedition.1 {
-                print!("E");
+fn get_blizzards(lines: Vec<String>) -> Vec<Blizzard> {
+    let mut blizzards = Vec::new();
+    for (y, line) in lines.iter().enumerate() {
+        for (x, c) in line.chars().enumerate() {
+            if c == '.' || c == '#' {
                 continue;
             }
-            let square = blizzards.iter().filter(|b| b.x == x && b.y == y);
-            let pos_count = square.clone().count();
-            if pos_count == 0 {
-                print!(".");
-                continue;
-            }
-            if pos_count > 1 {
-                print!("{}", pos_count);
-                continue;
-            }
-            match square.clone().next().unwrap().dir {
-                Dir::D => print!("v"),
-                Dir::U => print!("^"),
-                Dir::L => print!("<"),
-                Dir::R => print!(">"),
-            }
+            blizzards.push(Blizzard::new(
+                x - 1,
+                y - 1,
+                match c {
+                    '^' => Dir::U,
+                    'v' => Dir::D,
+                    '<' => Dir::L,
+                    '>' => Dir::R,
+                    _ => panic!("Unknown square"),
+                },
+            ));
         }
-        println!("#");
     }
-    (0..(MAX_X + 2)).for_each(|i| {
-        if expedition.1 == (MAX_Y + 1) as isize && expedition.0 == i as isize - 1 {
-            print!("E");
-            return;
-        }
-        if i == MAX_X {
-            print!(".");
-        } else {
-            print!("#");
-        }
-    });
-    println!();
-    println!();
+    blizzards
 }
 
 fn move_blizzards(blizzards: &mut Vec<Blizzard>) {
     let mut new_blizzards = Vec::new();
     for b in &mut blizzards.iter() {
-        match b.dir {
-            Dir::D => {
-                if b.y == MAX_Y - 1 {
-                    new_blizzards.push(Blizzard {
-                        x: b.x,
-                        y: 0,
-                        dir: Dir::D,
-                    });
-                    continue;
-                }
-            }
-            Dir::U => {
-                if b.y == 0 {
-                    new_blizzards.push(Blizzard {
-                        x: b.x,
-                        y: MAX_Y - 1,
-                        dir: Dir::U,
-                    });
-                    continue;
-                }
-            }
-            Dir::L => {
-                if b.x == 0 {
-                    new_blizzards.push(Blizzard {
-                        x: MAX_X - 1,
-                        y: b.y,
-                        dir: Dir::L,
-                    });
-                    continue;
-                }
-            }
-            Dir::R => {
-                if b.x == MAX_X - 1 {
-                    new_blizzards.push(Blizzard {
-                        x: 0,
-                        y: b.y,
-                        dir: Dir::R,
-                    });
-                    continue;
-                }
-            }
-        }
-
         let (new_x, new_y) = match b.dir {
-            Dir::D => (b.x, b.y + 1),
-            Dir::U => (b.x, b.y - 1),
-            Dir::L => (b.x - 1, b.y),
-            Dir::R => (b.x + 1, b.y),
+            Dir::D => (b.x as isize, b.y as isize + 1),
+            Dir::U => (b.x as isize, b.y as isize - 1),
+            Dir::L => (b.x as isize - 1, b.y as isize),
+            Dir::R => (b.x as isize + 1, b.y as isize),
         };
-        new_blizzards.push(Blizzard {
-            x: new_x,
-            y: new_y,
-            dir: b.dir,
-        });
+        if new_x < 0 {
+            new_blizzards.push(Blizzard::new(MAX_X - 1, new_y.try_into().unwrap(), b.dir));
+        } else if new_x >= MAX_X as isize {
+            new_blizzards.push(Blizzard::new(0, new_y.try_into().unwrap(), b.dir));
+        } else if new_y < 0 {
+            new_blizzards.push(Blizzard::new(new_x.try_into().unwrap(), MAX_Y - 1, b.dir));
+        } else if new_y >= MAX_Y as isize {
+            new_blizzards.push(Blizzard::new(new_x.try_into().unwrap(), 0, b.dir));
+        } else {
+            new_blizzards.push(Blizzard::new(
+                new_x.try_into().unwrap(),
+                new_y.try_into().unwrap(),
+                b.dir,
+            ));
+        }
     }
     *blizzards = new_blizzards;
 }
 
-fn has_blizzard(blizzards: &Vec<Blizzard>, x: isize, y: isize) -> bool {
+fn has_blizzard(blizzards: &[Blizzard], x: isize, y: isize) -> bool {
     blizzards
         .iter()
         .any(|b| b.x as isize == x && b.y as isize == y)
 }
 
-fn get_expedition_movement_options(
+fn get_movement_options(
     expedition: &(isize, isize),
-    blizzards: &Vec<Blizzard>,
+    blizzards: &[Blizzard],
     start: &(isize, isize),
     end: &(isize, isize),
 ) -> Vec<(isize, isize)> {
@@ -204,37 +111,34 @@ struct Path {
     position: (isize, isize),
 }
 
+impl Path {
+    pub fn new(steps: usize, position: (isize, isize)) -> Path {
+        Path { steps, position }
+    }
+}
+
 fn get_steps_needed_for_quickest_path_to_exit(
     blizzards: &mut Vec<Blizzard>,
     start: &(isize, isize),
     end: &(isize, isize),
 ) -> usize {
     let mut paths = Vec::new();
-    paths.push(Path {
-        steps: 0,
-        position: *start,
-    });
+    paths.push(Path::new(0, *start));
     loop {
         move_blizzards(blizzards);
         let mut new_paths: Vec<Path> = Vec::new();
         for path in paths {
-            let new_positions =
-                get_expedition_movement_options(&path.position, &blizzards, start, end);
+            if path.position.0 == end.0 as isize && path.position.1 == end.1 as isize {
+                return path.steps;
+            }
+            let new_positions = get_movement_options(&path.position, blizzards, start, end);
             for p in new_positions {
-                if p.0 == end.0 as isize && p.1 == end.1 as isize {
-                    move_blizzards(blizzards);
-                    return path.steps + 1;
-                }
-                if new_paths
+                if !new_paths
                     .iter()
                     .any(|p2| p2.position == p && p2.steps <= path.steps + 1)
                 {
-                    continue;
+                    new_paths.push(Path::new(path.steps + 1, p))
                 }
-                new_paths.push(Path {
-                    steps: path.steps + 1,
-                    position: p,
-                })
             }
         }
         paths = new_paths;
