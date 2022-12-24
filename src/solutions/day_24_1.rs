@@ -4,7 +4,7 @@ use std::{char::MAX, collections::HashMap, time::Instant};
 const MAX_X: usize = 100;
 const MAX_Y: usize = 35;
 const ENTRANCE: (isize, isize) = (0, -1);
-const EXIT: (usize, usize) = (MAX_X - 1, MAX_Y);
+const EXIT: (isize, isize) = (MAX_X as isize - 1, MAX_Y as isize);
 const MAX_PATHS: usize = 20000;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
@@ -110,9 +110,9 @@ fn print_blizzards(blizzards: &Vec<Blizzard>, expedition: &(isize, isize)) {
     println!();
 }
 
-fn move_blizzards(blizzards: Vec<Blizzard>) -> Vec<Blizzard> {
+fn move_blizzards(blizzards: &mut Vec<Blizzard>) {
     let mut new_blizzards = Vec::new();
-    for b in blizzards {
+    for b in &mut blizzards.iter() {
         match b.dir {
             Dir::D => {
                 if b.y == MAX_Y - 1 {
@@ -168,7 +168,7 @@ fn move_blizzards(blizzards: Vec<Blizzard>) -> Vec<Blizzard> {
             dir: b.dir,
         });
     }
-    new_blizzards
+    *blizzards = new_blizzards;
 }
 
 fn has_blizzard(blizzards: &Vec<Blizzard>, x: isize, y: isize) -> bool {
@@ -180,13 +180,15 @@ fn has_blizzard(blizzards: &Vec<Blizzard>, x: isize, y: isize) -> bool {
 fn get_expedition_movement_options(
     expedition: &(isize, isize),
     blizzards: &Vec<Blizzard>,
+    start: &(isize, isize),
+    end: &(isize, isize),
 ) -> Vec<(isize, isize)> {
     vec![(0, 0), (0, -1), (0, 1), (-1, 0), (1, 0)]
         .iter()
         .map(|(x, y)| (expedition.0 + x, expedition.1 + y))
         .filter(|(x, y)| {
-            (x == &(EXIT.0 as isize) && y == &(EXIT.1 as isize))
-                || (x == &(ENTRANCE.0 as isize) && y == &(ENTRANCE.1 as isize))
+            (x == &end.0 && y == &end.1)
+                || (x == &start.0 && y == &start.1)
                 || (*x >= 0
                     && *x < MAX_X as isize
                     && *y >= 0
@@ -202,56 +204,25 @@ struct Path {
     position: (isize, isize),
 }
 
-fn distance_from_exit(position: &(isize, isize)) -> usize {
-    ((position.0 - EXIT.0 as isize).abs() + (position.1 - EXIT.1 as isize).abs()) as usize
-}
-
-// Remove paths at the same position with a higher step count
-fn prune_paths(paths: Vec<Path>) -> Vec<Path> {
-    let mut new_paths: Vec<Path> = Vec::new();
-    for path in paths {
-        if new_paths
-            .iter()
-            .any(|p| p.position == path.position && p.steps < path.steps)
-        {
-            continue;
-        }
-        new_paths.push(path);
-    }
-
-    // if new_paths.len() > MAX_PATHS {
-    // sort from lowest distance from exit to highest
-    new_paths.sort_by(|a, b| distance_from_exit(&a.position).cmp(&distance_from_exit(&b.position)));
-    if new_paths.len() > 2 {
-        assert!(
-            distance_from_exit(&new_paths.first().unwrap().position)
-                < distance_from_exit(&new_paths.last().unwrap().position)
-        );
-        println!(
-            "Closest position {}",
-            distance_from_exit(&new_paths.first().unwrap().position)
-        );
-    }
-    new_paths.truncate(MAX_PATHS);
-    // }
-
-    new_paths
-}
-
-fn get_steps_needed_for_quickest_path_to_exit(lines: Vec<String>) -> usize {
-    let mut blizzards = get_blizzards(lines);
+fn get_steps_needed_for_quickest_path_to_exit(
+    blizzards: &mut Vec<Blizzard>,
+    start: &(isize, isize),
+    end: &(isize, isize),
+) -> usize {
     let mut paths = Vec::new();
     paths.push(Path {
         steps: 0,
-        position: ENTRANCE,
+        position: *start,
     });
     loop {
-        blizzards = move_blizzards(blizzards);
+        move_blizzards(blizzards);
         let mut new_paths: Vec<Path> = Vec::new();
         for path in paths {
-            let new_positions = get_expedition_movement_options(&path.position, &blizzards);
+            let new_positions =
+                get_expedition_movement_options(&path.position, &blizzards, start, end);
             for p in new_positions {
-                if p.0 == EXIT.0 as isize && p.1 == EXIT.1 as isize {
+                if p.0 == end.0 as isize && p.1 == end.1 as isize {
+                    move_blizzards(blizzards);
                     return path.steps + 1;
                 }
                 if new_paths
@@ -274,7 +245,8 @@ pub fn solve() -> String {
     let now = Instant::now();
     let lines = get_data_as_lines("day_24_blizzard.txt");
 
-    let steps = get_steps_needed_for_quickest_path_to_exit(lines);
+    let mut blizzards = get_blizzards(lines);
+    let steps = get_steps_needed_for_quickest_path_to_exit(&mut blizzards, &ENTRANCE, &EXIT);
 
     println!("Runtime: {:.2?}", now.elapsed());
     steps.to_string()
