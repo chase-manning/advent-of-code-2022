@@ -58,10 +58,12 @@ fn get_position_after_move(elf: &(isize, isize), direction: &Dir) -> (isize, isi
     }
 }
 
-fn is_alone(elves: &[(isize, isize)], elf: &(isize, isize)) -> bool {
-    !elves
+fn get_surrounding_elves(elves: &[(isize, isize)], elf: &(isize, isize)) -> Vec<(isize, isize)> {
+    elves
         .iter()
-        .any(|e| e != elf && (e.0 - elf.0).abs() <= 1 && (e.1 - elf.1).abs() <= 1)
+        .filter(|e| e != &elf && (e.0 - elf.0).abs() <= 1 && (e.1 - elf.1).abs() <= 1)
+        .cloned()
+        .collect::<Vec<_>>()
 }
 
 fn move_elves(elves: &mut [(isize, isize)]) -> usize {
@@ -71,12 +73,13 @@ fn move_elves(elves: &mut [(isize, isize)]) -> usize {
         let mut elf_proposals: HashMap<(isize, isize), (isize, isize)> = HashMap::new();
         let mut proposed_count: HashMap<(isize, isize), usize> = HashMap::new();
         for elf in elves.iter() {
-            if is_alone(elves, elf) {
+            let surrounding_elves = get_surrounding_elves(elves, elf);
+            if surrounding_elves.is_empty() {
                 continue;
             }
             for j in 0..4 {
                 let direction = directions[(iterations + j) % 4];
-                if can_propose_direction(elves, elf, &direction) {
+                if can_propose_direction(&surrounding_elves, elf, &direction) {
                     let pos = get_position_after_move(elf, &direction);
                     elf_proposals.insert(*elf, pos);
                     proposed_count.insert(pos, proposed_count.get(&pos).unwrap_or(&0) + 1);
