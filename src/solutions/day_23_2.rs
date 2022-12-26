@@ -69,7 +69,7 @@ fn get_surrounding_elves(elves: &[(isize, isize)], elf: &(isize, isize)) -> Vec<
 fn move_elves(elves: &mut [(isize, isize)]) -> usize {
     let directions = vec![Dir::N, Dir::S, Dir::W, Dir::E];
     let mut iterations = 0;
-    'main: loop {
+    loop {
         let mut elf_proposals: HashMap<(isize, isize), (isize, isize)> = HashMap::new();
         let mut proposed_count: HashMap<(isize, isize), usize> = HashMap::new();
         for elf in elves.iter() {
@@ -89,16 +89,18 @@ fn move_elves(elves: &mut [(isize, isize)]) -> usize {
         }
         iterations += 1;
         if elf_proposals.is_empty() {
-            break 'main;
+            return iterations;
         }
-        for (elf, position) in &elf_proposals {
+        for elf in elves.iter_mut() {
+            if !elf_proposals.contains_key(elf) {
+                continue;
+            }
+            let position = elf_proposals.get(elf).unwrap();
             if proposed_count.get(position).unwrap() == &1 {
-                let index = elves.iter().position(|e| e == elf).unwrap();
-                elves[index] = *position;
+                *elf = *position;
             }
         }
     }
-    iterations
 }
 
 pub fn solve() -> String {
