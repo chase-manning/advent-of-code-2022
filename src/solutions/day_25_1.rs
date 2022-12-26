@@ -17,7 +17,7 @@ fn num_to_snafu(num: &usize) -> String {
         let max_next = max_next(i);
         if remaining >= 0 {
             if remaining <= max_next {
-                if chars.len() > 0 {
+                if !chars.is_empty() {
                     chars.push('0');
                 }
             } else if remaining <= 5isize.pow(i as u32) + max_next {
