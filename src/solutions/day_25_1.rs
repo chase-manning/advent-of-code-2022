@@ -2,54 +2,49 @@ use crate::utils::files::get_data_as_lines;
 use std::time::Instant;
 
 fn max_next(index: isize) -> isize {
-    let mut total = 0;
-    for i in 0..index {
-        total += 5isize.pow(i as u32) * 2;
-    }
-    total
+    (0..index).map(|i| 5isize.pow(i as u32) * 2).sum()
 }
 
 fn num_to_snafu(num: &usize) -> String {
-    let mut chars = Vec::new();
-    let mut remaining = *num as isize;
-
-    let mut index: isize = 0;
-    while 5usize.pow(index as u32) <= *num {
-        index += 1;
+    let mut start: isize = 0;
+    while 5usize.pow(start as u32) <= *num {
+        start += 1;
     }
 
-    while index >= 0 {
-        let max_next = max_next(index);
+    let mut chars = Vec::new();
+    let mut remaining = *num as isize;
+    (0..=start).rev().for_each(|i| {
+        let max_next = max_next(i);
         if remaining >= 0 {
             if remaining <= max_next {
-                chars.push('0');
-            } else if remaining <= 5isize.pow(index as u32) + max_next {
+                if chars.len() > 0 {
+                    chars.push('0');
+                }
+            } else if remaining <= 5isize.pow(i as u32) + max_next {
                 chars.push('1');
-                remaining -= 5isize.pow(index as u32);
+                remaining -= 5isize.pow(i as u32);
             } else {
                 chars.push('2');
-                remaining -= 5isize.pow(index as u32) * 2;
+                remaining -= 5isize.pow(i as u32) * 2;
             }
         } else if remaining >= -max_next {
             chars.push('0');
-        } else if remaining >= -(5isize.pow(index as u32)) - max_next {
+        } else if remaining >= -(5isize.pow(i as u32)) - max_next {
             chars.push('-');
-            remaining += 5isize.pow(index as u32);
+            remaining += 5isize.pow(i as u32);
         } else {
             chars.push('=');
-            remaining += 5isize.pow(index as u32) * 2;
+            remaining += 5isize.pow(i as u32) * 2;
         }
-        index -= 1;
-    }
-    while chars[0] == '0' {
-        chars.remove(0);
-    }
-    return chars.iter().collect();
+    });
+
+    chars.iter().collect()
 }
 
 fn snafu_to_num(snafu: &str) -> usize {
     let mut chars = snafu.chars().collect::<Vec<char>>();
     chars.reverse();
+
     let mut num = 0;
     for (i, c) in chars.iter().enumerate() {
         let scale = 5usize.pow(i as u32);
